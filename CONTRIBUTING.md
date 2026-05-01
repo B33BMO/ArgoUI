@@ -1,7 +1,5 @@
 # Contributing Guide
 
-> **Chinese version**: [CONTRIBUTING.zh.md](CONTRIBUTING.zh.md)
-
 ## Prerequisites
 
 See [docs/contributing/development.md](docs/contributing/development.md) for environment setup. You will need:

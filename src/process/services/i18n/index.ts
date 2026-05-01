@@ -16,13 +16,8 @@ import {
 
 // Static imports – Vite bundles these into the main-process output so they
 // work correctly in both development and production (no fs.readFile needed).
+// US-only deployment: only English is bundled.
 import enUS from '@renderer/services/i18n/locales/en-US/index';
-import zhCN from '@renderer/services/i18n/locales/zh-CN/index';
-import jaJP from '@renderer/services/i18n/locales/ja-JP/index';
-import zhTW from '@renderer/services/i18n/locales/zh-TW/index';
-import koKR from '@renderer/services/i18n/locales/ko-KR/index';
-import trTR from '@renderer/services/i18n/locales/tr-TR/index';
-import ruRU from '@renderer/services/i18n/locales/ru-RU/index';
 
 // All locale data keyed by language code.
 // NOTE: When adding a new language, add a static import above and an entry here.
@@ -30,12 +25,6 @@ import ruRU from '@renderer/services/i18n/locales/ru-RU/index';
 // by Vite and the JSON files won't exist on disk in production.
 const localeData: LocaleData = {
   'en-US': enUS,
-  'zh-CN': zhCN,
-  'ja-JP': jaJP,
-  'zh-TW': zhTW,
-  'ko-KR': koKR,
-  'tr-TR': trTR,
-  'ru-RU': ruRU,
 };
 
 const fallbackData = localeData[DEFAULT_LANGUAGE] ?? {};
