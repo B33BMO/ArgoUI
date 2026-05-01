@@ -47,13 +47,16 @@ export class ChannelManager {
   private actionExecutor: ActionExecutor | null = null;
 
   private constructor() {
-    // Private constructor for singleton pattern
-    // Register built-in plugins
-    registerPlugin('telegram', TelegramPlugin);
-    registerPlugin('lark', LarkPlugin);
-    registerPlugin('dingtalk', DingTalkPlugin);
-    registerPlugin('weixin', WeixinPlugin);
-    registerPlugin('wecom', WecomPlugin);
+    // Built-in messaging-channel plugins (Telegram / Lark / DingTalk / WeChat /
+    // WeCom) are disabled in this build for CMMC compliance — their classes
+    // are inert stubs (see plugins/disabled/createDisabledPlugin.ts) and we
+    // intentionally do not register them with the runtime.
+    void registerPlugin;
+    void TelegramPlugin;
+    void LarkPlugin;
+    void DingTalkPlugin;
+    void WeixinPlugin;
+    void WecomPlugin;
   }
 
   /**
@@ -404,57 +407,15 @@ export class ChannelManager {
    * returns a generic "not supported" response.
    */
   async testPlugin(
-    pluginId: string,
-    token: string,
-    extraConfig?: { appId?: string; appSecret?: string }
+    _pluginId: string,
+    _token: string,
+    _extraConfig?: { appId?: string; appSecret?: string }
   ): Promise<{ success: boolean; botUsername?: string; error?: string }> {
-    const pluginType = this.getPluginTypeFromId(pluginId);
-
-    if (pluginType === 'telegram') {
-      const result = await TelegramPlugin.testConnection(token);
-      return {
-        success: result.success,
-        botUsername: result.botInfo?.username,
-        error: result.error,
-      };
-    }
-
-    if (pluginType === 'lark') {
-      const appId = extraConfig?.appId;
-      const appSecret = extraConfig?.appSecret;
-      if (!appId || !appSecret) {
-        return {
-          success: false,
-          error: 'App ID and App Secret are required for Lark',
-        };
-      }
-      const result = await LarkPlugin.testConnection(appId, appSecret);
-      return {
-        success: result.success,
-        botUsername: result.botInfo?.name,
-        error: result.error,
-      };
-    }
-
-    if (pluginType === 'dingtalk') {
-      const clientId = extraConfig?.appId; // Reuse appId field for clientId
-      const clientSecret = extraConfig?.appSecret; // Reuse appSecret field for clientSecret
-      if (!clientId || !clientSecret) {
-        return {
-          success: false,
-          error: 'Client ID and Client Secret are required for DingTalk',
-        };
-      }
-      const result = await DingTalkPlugin.testConnection(clientId, clientSecret);
-      return {
-        success: result.success,
-        botUsername: result.botInfo?.name,
-        error: result.error,
-      };
-    }
-
-    // Extension plugins: test connection not supported yet (will be handled by the plugin itself on start)
-    return { success: true, botUsername: undefined, error: undefined };
+    // Messaging-channel plugins are disabled in this build (CMMC).
+    return {
+      success: false,
+      error: 'Messaging channel plugins are disabled in this build.',
+    };
   }
 
   /**
