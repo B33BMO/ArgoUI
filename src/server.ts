@@ -22,7 +22,6 @@ import { getChannelManager } from './process/channels';
 import { closeDatabase } from './process/services/database/export';
 
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
-const ALLOW_REMOTE = process.env.ALLOW_REMOTE === 'true';
 const isResetPasswordMode = process.argv.includes('--resetpass');
 
 // Log environment diagnostics — fire-and-forget so it never blocks startup.
@@ -109,12 +108,11 @@ async function main(): Promise<void> {
   // Register all non-Electron bridge handlers
   await initBridgeStandalone();
 
-  // Start the WebServer
-  const instance = await startWebServerWithInstance(PORT, ALLOW_REMOTE);
-  // Expose to the top-level shutdown handler
+  // Start the WebServer (loopback-only — remote bind disabled in this build)
+  const instance = await startWebServerWithInstance(PORT, false);
   serverInstance = instance;
 
-  console.log(`[server] WebUI running on http://${ALLOW_REMOTE ? '0.0.0.0' : 'localhost'}:${PORT}`);
+  console.log(`[server] WebUI running on http://localhost:${PORT}`);
 }
 
 main().catch((err: unknown) => {

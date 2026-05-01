@@ -203,7 +203,7 @@ describe('startWebServerWithInstance default admin initialization', () => {
     expect(setSystemUserCredentialsMock).not.toHaveBeenCalled();
     expect(updatePasswordMock).not.toHaveBeenCalled();
     expect(createUserMock).not.toHaveBeenCalled();
-    expect(setupCorsMock).toHaveBeenCalledWith(expect.anything(), 3000, true);
+    expect(setupCorsMock).toHaveBeenCalledWith(expect.anything(), 3000, false);
   });
 
   it('falls back to the legacy admin row without rewriting the placeholder user', async () => {

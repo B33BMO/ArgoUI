@@ -244,8 +244,16 @@ export interface WebServerInstance {
  * @param allowRemote 是否允许远程访问 / Allow remote access
  * @returns 服务器实例 / Server instance
  */
-export async function startWebServerWithInstance(port: number, allowRemote = false): Promise<WebServerInstance> {
-  // 设置服务器配置 / Set server configuration
+export async function startWebServerWithInstance(
+  port: number,
+  allowRemoteRequest = false
+): Promise<WebServerInstance> {
+  // CMMC build: the WebUI MUST NOT bind to a non-loopback interface.
+  // Any caller asking for remote access is downgraded to loopback-only with a warning.
+  if (allowRemoteRequest) {
+    console.warn('[WebUI] Remote access requested but disabled in this build — binding to 127.0.0.1 only.');
+  }
+  const allowRemote = false;
   SERVER_CONFIG.setServerConfig(port, allowRemote);
 
   // 创建 Express 应用和服务器 / Create Express app and server
@@ -375,10 +383,9 @@ export async function startWebServerWithInstance(port: number, allowRemote = fal
  * @param port 服务器端口 / Server port
  * @param allowRemote 是否允许远程访问 / Allow remote access
  */
-export async function startWebServer(port: number, allowRemote = false): Promise<void> {
-  // 复用 startWebServerWithInstance
-  // Reuse startWebServerWithInstance
-  await startWebServerWithInstance(port, allowRemote);
+export async function startWebServer(port: number, _allowRemote = false): Promise<void> {
+  // allowRemote ignored — the loopback-only enforcement lives in startWebServerWithInstance.
+  await startWebServerWithInstance(port, false);
 
   // 不再自动打开浏览器，用户可手动访问控制台输出的 URL
   // No longer auto-open browser, user can manually visit the URL printed in console

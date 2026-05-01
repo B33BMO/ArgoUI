@@ -162,35 +162,14 @@ describe('webuiConfig module', () => {
   });
 
   describe('resolveRemoteAccess', () => {
-    it('should return true when isRemoteMode is true', async () => {
-      const { resolveRemoteAccess } = await import('@process/utils/webuiConfig');
-
-      expect(resolveRemoteAccess({}, true)).toBe(true);
-    });
-
-    it('should return true when env says allow remote', async () => {
+    it('always returns false in this build (remote bind disabled)', async () => {
       process.env.AIONUI_ALLOW_REMOTE = '1';
-      const { resolveRemoteAccess } = await import('@process/utils/webuiConfig');
-
-      expect(resolveRemoteAccess({}, false)).toBe(true);
-    });
-
-    it('should return true when host is 0.0.0.0', async () => {
       process.env.AIONUI_HOST = '0.0.0.0';
       const { resolveRemoteAccess } = await import('@process/utils/webuiConfig');
 
-      expect(resolveRemoteAccess({}, false)).toBe(true);
-    });
-
-    it('should return true when config allows remote', async () => {
-      const { resolveRemoteAccess } = await import('@process/utils/webuiConfig');
-
-      expect(resolveRemoteAccess({ allowRemote: true }, false)).toBe(true);
-    });
-
-    it('should return false when nothing enables remote', async () => {
-      const { resolveRemoteAccess } = await import('@process/utils/webuiConfig');
-
+      expect(resolveRemoteAccess({ allowRemote: true }, true)).toBe(false);
+      expect(resolveRemoteAccess({ allowRemote: true }, false)).toBe(false);
+      expect(resolveRemoteAccess({}, true)).toBe(false);
       expect(resolveRemoteAccess({}, false)).toBe(false);
     });
   });

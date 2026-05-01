@@ -39,12 +39,7 @@ import {
   showAndFocusMainWindow,
   showOrCreateMainWindow,
 } from './process/utils/mainWindowLifecycle';
-import {
-  loadUserWebUIConfig,
-  resolveRemoteAccess,
-  resolveWebUIPort,
-  restoreDesktopWebUIFromPreferences,
-} from './process/utils/webuiConfig';
+import { loadUserWebUIConfig, resolveWebUIPort, restoreDesktopWebUIFromPreferences } from './process/utils/webuiConfig';
 import {
   createOrUpdateTray,
   destroyTray,
@@ -175,7 +170,6 @@ const getSwitchValue = (flag: string): string | undefined => {
 const hasCommand = (cmd: string) => process.argv.includes(cmd);
 
 const isWebUIMode = hasSwitch('webui');
-const isRemoteMode = hasSwitch('remote');
 const isResetPasswordMode = hasCommand('--resetpass');
 const isVersionMode = hasCommand('--version') || hasCommand('-v');
 
@@ -442,9 +436,8 @@ const handleAppReady = async (): Promise<void> => {
       // Config file loaded from user directory
     }
     const resolvedPort = resolveWebUIPort(userConfigInfo.config, getSwitchValue);
-    const allowRemote = resolveRemoteAccess(userConfigInfo.config, isRemoteMode);
     try {
-      await startWebServer(resolvedPort, allowRemote);
+      await startWebServer(resolvedPort, false);
     } catch (err) {
       console.error(`[WebUI] Failed to start server on port ${resolvedPort}:`, err);
       app.exit(1);

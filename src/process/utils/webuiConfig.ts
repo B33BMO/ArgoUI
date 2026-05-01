@@ -77,13 +77,11 @@ export const resolveWebUIPort = (
   return SERVER_CONFIG.DEFAULT_PORT;
 };
 
-export const resolveRemoteAccess = (config: WebUIUserConfig, isRemoteMode: boolean): boolean => {
-  const envRemote = parseBooleanEnv(process.env.AIONUI_ALLOW_REMOTE || process.env.AIONUI_REMOTE);
-  const hostHint = process.env.AIONUI_HOST?.trim();
-  const hostRequestsRemote = hostHint ? ['0.0.0.0', '::', '::0'].includes(hostHint) : false;
-  const configRemote = config.allowRemote === true;
-
-  return isRemoteMode || hostRequestsRemote || envRemote === true || configRemote;
+export const resolveRemoteAccess = (_config: WebUIUserConfig, _isRemoteMode: boolean): boolean => {
+  // CMMC build: remote-bind is disabled regardless of CLI flag, env var, or config.
+  // The webserver enforces loopback-only at startup; this function exists only so
+  // legacy call sites continue to compile.
+  return false;
 };
 
 export const restoreDesktopWebUIFromPreferences = async (): Promise<void> => {
