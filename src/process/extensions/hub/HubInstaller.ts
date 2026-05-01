@@ -119,7 +119,6 @@ export class HubInstallerImpl {
       const zipPath = await this.resolveZipPath(name, extInfo.dist.tarball, extInfo.bundled);
 
       // Step 2: Verify Integrity (SHA-512 SRI)
-      // TODO: 各平台校验有差异，先放在一边，后续完善
       // await this.verifyIntegrity(zipPath, extInfo.dist.integrity);
 
       // Step 3: Extract (.zip)

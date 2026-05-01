@@ -16,17 +16,15 @@ interface HTMLPreviewProps {
 }
 
 interface SelectedElement {
-  path: string; // DOM 路径，如 "html > body > div:nth-child(2) > p:nth-child(1)"
-  html: string; // 元素的 outerHTML
-  startLine?: number; // 代码起始行（估算）
-  endLine?: number; // 代码结束行（估算）
+  path: string; // DOM "html > body > div:nth-child(2) > p:nth-child(1)"
+  html: string; // outerHTML
+  startLine?: number;
+  endLine?: number;
 }
 
 /**
- * HTML 预览组件
- * - 支持实时预览和代码编辑
- * - 支持元素选择器（类似 DevTools）
- * - 支持双向定位：预览 ↔ 代码
+ *
+ *
  */
 const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolbar = false }) => {
   const { t } = useTranslation();
@@ -41,7 +39,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
     return (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'light';
   });
 
-  // 监听主题变化
   useEffect(() => {
     const updateTheme = () => {
       const theme = (document.documentElement.getAttribute('data-theme') as 'light' | 'dark') || 'light';
@@ -57,7 +54,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
     return () => observer.disconnect();
   }, []);
 
-  // 初始化 iframe 内容
+  // iframe
   useEffect(() => {
     if (!iframeRef.current) return;
 
@@ -66,18 +63,18 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
 
     if (!iframeDoc) return;
 
-    // 写入 HTML 内容 / Write HTML content
+    // Write HTML content
     iframeDoc.open();
 
-    // 注入 <base> 标签以支持相对路径 / Inject <base> tag to support relative paths
+    // Inject <base> tag to support relative paths
     let finalHtml = htmlCode;
     if (filePath) {
-      // 获取文件所在目录 / Get directory of the file
+      // Get directory of the file
       const fileDir = filePath.substring(0, filePath.lastIndexOf('/') + 1);
-      // 构造 file:// 协议的 base URL / Construct file:// protocol base URL
+      // Construct file:// protocol base URL
       const baseUrl = `file://${fileDir}`;
 
-      // 检查是否已有 base 标签 / Check if base tag exists
+      // Check if base tag exists
       if (!finalHtml.match(/<base\s+href=/i)) {
         if (finalHtml.match(/<head>/i)) {
           finalHtml = finalHtml.replace(/<head>/i, `<head><base href="${baseUrl}">`);
@@ -92,14 +89,13 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
     iframeDoc.write(finalHtml);
     iframeDoc.close();
 
-    // 注入元素选择器脚本
     if (inspectorMode) {
       injectInspectorScript(iframeDoc);
     }
   }, [htmlCode, inspectorMode]);
 
   /**
-   * 注入元素选择器脚本到 iframe
+   * iframe
    */
   const injectInspectorScript = (iframeDoc: Document) => {
     const script = iframeDoc.createElement('script');
@@ -108,7 +104,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
         let hoveredElement = null;
         let overlay = null;
 
-        // 创建高亮遮罩
         function createOverlay() {
           overlay = document.createElement('div');
           overlay.style.position = 'absolute';
@@ -120,7 +115,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
           document.body.appendChild(overlay);
         }
 
-        // 更新遮罩位置
         function updateOverlay(element) {
           if (!overlay) createOverlay();
           const rect = element.getBoundingClientRect();
@@ -131,14 +125,12 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
           overlay.style.display = 'block';
         }
 
-        // 隐藏遮罩
         function hideOverlay() {
           if (overlay) {
             overlay.style.display = 'none';
           }
         }
 
-        // 获取元素的 CSS 选择器路径
         function getElementPath(element) {
           const path = [];
           while (element && element.nodeType === Node.ELEMENT_NODE) {
@@ -166,7 +158,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
           return path.join(' > ');
         }
 
-        // 鼠标移动事件
         document.addEventListener('mousemove', function(e) {
           hoveredElement = e.target;
           if (hoveredElement && hoveredElement !== document.body && hoveredElement !== document.documentElement) {
@@ -176,12 +167,10 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
           }
         });
 
-        // 鼠标离开事件
         document.addEventListener('mouseleave', function() {
           hideOverlay();
         });
 
-        // 点击事件 - 选中元素
         document.addEventListener('click', function(e) {
           e.preventDefault();
           e.stopPropagation();
@@ -192,7 +181,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
               html: hoveredElement.outerHTML,
             };
 
-            // 发送消息到父窗口
             window.parent.postMessage({
               type: 'element-selected',
               data: elementInfo
@@ -200,7 +188,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
           }
         });
 
-        // 右键菜单事件
         document.addEventListener('contextmenu', function(e) {
           e.preventDefault();
 
@@ -210,7 +197,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
               html: hoveredElement.outerHTML,
             };
 
-            // 发送消息到父窗口
             window.parent.postMessage({
               type: 'element-contextmenu',
               data: {
@@ -227,7 +213,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
   };
 
   /**
-   * 监听 iframe 消息
+   * iframe
    */
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -238,7 +224,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
       } else if (event.data.type === 'element-contextmenu') {
         const { element, x, y } = event.data.data;
 
-        // 计算上下文菜单位置（相对于父窗口）
         const iframe = iframeRef.current;
         if (iframe) {
           const iframeRect = iframe.getBoundingClientRect();
@@ -256,7 +241,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
   }, [messageApi]);
 
   /**
-   * 关闭右键菜单
    */
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -267,7 +251,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
   }, [contextMenu]);
 
   /**
-   * 复制元素 HTML
    */
   const handleCopyHTML = useCallback(
     (html: string) => {
@@ -279,7 +262,6 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
   );
 
   /**
-   * 下载 HTML
    */
   const handleDownload = () => {
     const blob = new Blob([htmlCode], { type: 'text/html;charset=utf-8' });
@@ -294,18 +276,15 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
   };
 
   /**
-   * 切换编辑模式
    */
   const handleToggleEdit = () => {
     if (editMode) {
-      // 保存编辑
       setHtmlCode(htmlCode);
     }
     setEditMode(!editMode);
   };
 
   /**
-   * 切换检查器模式
    */
   const handleToggleInspector = () => {
     setInspectorMode(!inspectorMode);
@@ -318,11 +297,11 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
     <div className='h-full w-full flex flex-col bg-bg-1'>
       {messageContextHolder}
 
-      {/* 工具栏 */}
+      {}
       {!hideToolbar && (
         <div className='flex items-center justify-between h-40px px-12px bg-bg-2 border-b border-border-base flex-shrink-0'>
           <div className='flex items-center gap-8px'>
-            {/* 编辑按钮 */}
+            {}
             <button
               onClick={handleToggleEdit}
               className={`px-12px py-4px rd-4px text-12px transition-colors ${editMode ? 'bg-primary text-white' : 'bg-bg-3 text-t-primary hover:bg-bg-4'}`}
@@ -330,7 +309,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
               {editMode ? `💾 ${t('common.save')}` : `✏️ ${t('common.edit')}`}
             </button>
 
-            {/* 元素选择器按钮 */}
+            {}
             <button
               onClick={handleToggleInspector}
               className={`px-12px py-4px rd-4px text-12px transition-colors ${inspectorMode ? 'bg-primary text-white' : 'bg-bg-3 text-t-primary hover:bg-bg-4'}`}
@@ -339,7 +318,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
               🔍 {inspectorMode ? t('preview.html.inspecting') : t('preview.html.inspectorButton')}
             </button>
 
-            {/* 选中的元素路径 */}
+            {}
             {selectedElement && (
               <div className='text-12px text-t-secondary ml-8px'>
                 {t('preview.html.selectedLabel')} <code className='bg-bg-3 px-4px rd-2px'>{selectedElement.path}</code>
@@ -348,7 +327,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
           </div>
 
           <div className='flex items-center gap-8px'>
-            {/* 下载按钮 */}
+            {}
             <button
               onClick={handleDownload}
               className='flex items-center gap-4px px-8px py-4px rd-4px cursor-pointer hover:bg-bg-3 transition-colors'
@@ -373,9 +352,9 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
         </div>
       )}
 
-      {/* 内容区域 */}
+      {}
       <div className='flex-1 flex overflow-hidden'>
-        {/* 左侧：代码编辑器（编辑模式时显示） */}
+        {}
         {editMode && (
           <div className='flex-1 overflow-hidden border-r border-border-base'>
             <MonacoEditor
@@ -398,7 +377,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
           </div>
         )}
 
-        {/* 右侧：HTML 预览 */}
+        {}
         <div className={`${editMode ? 'flex-1' : 'w-full'} overflow-auto bg-white`}>
           <iframe
             ref={iframeRef}
@@ -409,7 +388,7 @@ const HTMLPreview: React.FC<HTMLPreviewProps> = ({ content, filePath, hideToolba
         </div>
       </div>
 
-      {/* 右键菜单 */}
+      {}
       {contextMenu && (
         <div
           className='fixed bg-bg-1 border border-border-base rd-6px shadow-lg py-4px z-9999'

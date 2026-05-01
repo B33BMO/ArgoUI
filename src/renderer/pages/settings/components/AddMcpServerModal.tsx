@@ -26,7 +26,7 @@ const AddMcpServerModal: React.FC<AddMcpServerModalProps> = ({
 
   useEffect(() => {
     if (visible && !server) {
-      // 初始化时检测可用的agents
+      // agents
       const loadAgents = async () => {
         try {
           const response = await acpConversation.getAvailableAgents.invoke();
@@ -34,7 +34,6 @@ const AddMcpServerModal: React.FC<AddMcpServerModalProps> = ({
           if (response.success && response.data) {
             const agents = response.data.map((agent) => ({ backend: agent.backend, name: agent.name }));
 
-            // 根据检测到的agents数量和importMode决定显示哪个模态框
             if (agents.length === 0) {
               setShowJsonModal(true);
             } else if (importMode === 'json') {
@@ -52,10 +51,9 @@ const AddMcpServerModal: React.FC<AddMcpServerModalProps> = ({
       };
       void loadAgents();
     } else if (visible && server) {
-      // 编辑现有服务器时直接显示JSON模态框
       setShowJsonModal(true);
     } else if (!visible) {
-      // 当 modal 关闭时，重置状态
+      // modal
       setShowJsonModal(false);
       setShowOneClickModal(false);
     }

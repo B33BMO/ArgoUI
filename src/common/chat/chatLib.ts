@@ -28,47 +28,41 @@ import type { IResponseMessage } from '../adapter/ipcBridge';
 import { uuid } from '../utils';
 
 /**
- * 安全的路径拼接函数，兼容Windows和Mac
- * @param basePath 基础路径
- * @param relativePath 相对路径
- * @returns 拼接后的绝对路径
+ * @param basePath
+ * @param relativePath
+ * @returns
  */
 export const joinPath = (basePath: string, relativePath: string): string => {
-  // 标准化路径分隔符为 /
   const normalizePath = (path: string) => path.replace(/\\/g, '/');
 
   const base = normalizePath(basePath);
   const relative = normalizePath(relativePath);
 
-  // 去掉base路径末尾的斜杠
+  // base
   const cleanBase = base.replace(/\/+$/, '');
 
-  // 处理相对路径中的 ./ 和 ../
   const parts = relative.split('/');
   const resultParts = [];
 
   for (const part of parts) {
     if (part === '.' || part === '') {
-      continue; // 跳过 . 和空字符串
+      continue;
     } else if (part === '..') {
-      // 处理上级目录
       if (resultParts.length > 0) {
-        resultParts.pop(); // 移除最后一个部分
+        resultParts.pop();
       }
     } else {
       resultParts.push(part);
     }
   }
 
-  // 拼接路径
   const result = cleanBase + '/' + resultParts.join('/');
 
-  // 确保路径格式正确
-  return result.replace(/\/+/g, '/'); // 将多个连续的斜杠替换为单个
+  return result.replace(/\/+/g, '/');
 };
 
 /**
- * @description 跟对话相关的消息类型申明 及相关处理
+ * @description
  */
 
 type TMessageType =
@@ -89,34 +83,26 @@ type TMessageType =
 
 interface IMessage<T extends TMessageType, Content extends Record<string, any>> {
   /**
-   * 唯一ID
    */
   id: string;
   /**
-   * 消息来源ID，
    */
   msg_id?: string;
 
-  //消息会话ID
   conversation_id: string;
   /**
-   * 消息类型
    */
   type: T;
   /**
-   * 消息内容
    */
   content: Content;
   /**
-   * 消息创建时间
    */
   createdAt?: number;
   /**
-   * 消息位置
    */
   position?: 'left' | 'right' | 'center' | 'pop';
   /**
-   * 消息状态
    */
   status?: 'finish' | 'pending' | 'error' | 'work';
   /**
@@ -221,7 +207,7 @@ export type IMessageAgentStatus = IMessage<
   {
     backend: AgentBackend; // Agent identifier: 'claude', 'qwen', 'codex', 'remote', etc.
     status: 'connecting' | 'connected' | 'authenticated' | 'session_active' | 'error';
-    /** Display name for the agent (e.g. extension-contributed adapter name) / Agent 显示名称 */
+    /** Display name for the agent (e.g. extension-contributed adapter name)*/
     agentName?: string;
     // Optional legacy fields for backward compatibility
     sessionId?: string;
@@ -377,7 +363,6 @@ export type TMessage =
   | IMessageSkillSuggest
   | IMessageCronTrigger;
 
-// 统一所有需要用户交互的用户类型
 export interface IConfirmation<Option extends any = any> {
   title?: string;
   id: string;
@@ -397,7 +382,7 @@ export interface IConfirmation<Option extends any = any> {
 }
 
 /**
- * @description 将后端返回的消息转换为前端消息
+ * @description
  * */
 export const transformMessage = (message: IResponseMessage): TMessage => {
   switch (message.type) {
@@ -587,7 +572,7 @@ export const transformMessage = (message: IResponseMessage): TMessage => {
 };
 
 /**
- * @description 将消息合并到消息列表中
+ * @description
  * */
 export const composeMessage = (
   message: TMessage | undefined,
@@ -747,18 +732,17 @@ export const composeMessage = (
 };
 
 export const handleImageGenerationWithWorkspace = (message: TMessage, workspace: string): TMessage => {
-  // 只处理text类型的消息
+  // text
   if (message.type !== 'text') {
     return message;
   }
 
-  // 深拷贝消息以避免修改原始对象
   const processedMessage = {
     ...message,
     content: {
       ...message.content,
       content: message.content.content.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, imagePath) => {
-        // 如果是绝对路径、http链接或data URL，保持不变
+        // httpdata URL
         if (
           imagePath.startsWith('http') ||
           imagePath.startsWith('data:') ||
@@ -769,7 +753,7 @@ export const handleImageGenerationWithWorkspace = (message: TMessage, workspace:
         ) {
           return match;
         }
-        // 如果是相对路径，与workspace拼接
+        // workspace
         const absolutePath = joinPath(workspace, imagePath);
         return `![${alt}](${encodeURI(absolutePath)})`;
       }),

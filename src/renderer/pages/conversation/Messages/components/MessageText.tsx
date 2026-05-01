@@ -95,7 +95,7 @@ const useFormatContent = (content: string) => {
 
 const MessageText: React.FC<{ message: IMessageText }> = ({ message }) => {
   // Filter think tags from content before rendering
-  // 在渲染前过滤 think 标签
+  // think
   const contentToRender = useMemo(() => {
     let content = message.content.content;
     if (typeof content === 'string') {
@@ -124,7 +124,6 @@ const MessageText: React.FC<{ message: IMessageText }> = ({ message }) => {
     [conversationContext?.workspace, files]
   );
 
-  // 过滤空内容，避免渲染空DOM
   if (!message.content.content || (typeof message.content.content === 'string' && !message.content.content.trim())) {
     return null;
   }
@@ -204,7 +203,7 @@ const MessageText: React.FC<{ message: IMessageText }> = ({ message }) => {
                 : undefined),
           }}
         >
-          {/* JSON 内容使用折叠组件 Use CollapsibleContent for JSON content */}
+          {/*JSON Use CollapsibleContent for JSON content*/}
           {shouldRenderPlainText ? (
             <div className='whitespace-pre-wrap break-words' data-testid='message-text-content'>
               {text}

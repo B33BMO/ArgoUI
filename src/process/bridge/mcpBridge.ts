@@ -14,7 +14,6 @@ import {
 } from '@process/services/mcpServices/complianceGuard';
 
 export function initMcpBridge(): void {
-  // MCP 服务相关 IPC 处理程序
   ipcBridge.mcpService.getAgentMcpConfigs.provider(async (agents) => {
     try {
       const result = await mcpService.getAgentMcpConfigs(agents);
@@ -69,7 +68,7 @@ export function initMcpBridge(): void {
     }
   });
 
-  // OAuth 相关 IPC 处理程序 — only meaningful for remote MCPs, hard-disabled in this build.
+  // OAuth IPC only meaningful for remote MCPs, hard-disabled in this build
   ipcBridge.mcpService.checkOAuthStatus.provider(async () => {
     return { success: false, msg: new RemoteMcpTransportError().message };
   });

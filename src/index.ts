@@ -94,7 +94,6 @@ if (!gotTheLock) {
 }
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
-// 修复 macOS 和 Linux 下 GUI 应用的 PATH 环境变量,使其与命令行一致
 if (process.platform === 'darwin' || process.platform === 'linux') {
   fixPath();
 
@@ -221,7 +220,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     autoHideMenuBar: true,
     // Set icon for Windows/Linux in development mode
     ...(devIcon && process.platform !== 'darwin' ? { icon: devIcon } : {}),
-    // Custom titlebar configuration / 自定义标题栏配置
+    // Custom titlebar configuration
     ...(process.platform === 'darwin'
       ? {
           titleBarStyle: 'hidden',
@@ -235,7 +234,7 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
       : { frame: false }),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
-      webviewTag: true, // 启用 webview 标签用于 HTML 预览 / Enable webview tag for HTML preview
+      webviewTag: true, // Enable webview tag for HTML preview
     },
   });
   console.log(`[AionUi] Main window created (id=${mainWindow.id})`);
@@ -337,7 +336,6 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
     ipcBridge.application.devToolsStateChanged.emit({ isOpen: false });
   });
 
-  // 关闭拦截：当启用"关闭到托盘"时，隐藏窗口而非关闭
   // Close interception: hide window instead of closing when "close to tray" is enabled
   mainWindow.on('close', (event) => {
     if (mainWindow.isDestroyed()) return;
@@ -460,7 +458,7 @@ const handleAppReady = async (): Promise<void> => {
       }
     });
   } else {
-    // 初始化关闭到托盘设置 / Initialize close-to-tray setting
+    // Initialize close-to-tray setting
     if (isE2ETestMode) {
       setCloseToTrayEnabled(false);
       destroyTray();
@@ -517,7 +515,6 @@ const handleAppReady = async (): Promise<void> => {
       .then(() => mark('initializeAcpDetector'))
       .catch((error) => console.error('[ACP] Detection failed:', error));
 
-    // 读取语言设置并初始化主进程 i18n，然后刷新托盘菜单
     // Read language setting and initialize main process i18n, then refresh tray menu
     try {
       const savedLanguage = await ProcessConfig.get('language');
@@ -528,13 +525,13 @@ const handleAppReady = async (): Promise<void> => {
       console.error('[index] Failed to initialize i18n language:', error);
     }
 
-    // 监听语言变更，刷新托盘菜单文案 / Listen for language changes to refresh tray menu labels
+    // Listen for language changes to refresh tray menu labels
     onLanguageChanged(() => {
       void refreshTrayMenu();
     });
 
     if (!isE2ETestMode) {
-      // 窗口创建后异步恢复 WebUI，不阻塞 UI / Restore WebUI async after window creation, non-blocking
+      // Restore WebUI async after window creation, non-blocking
       restoreDesktopWebUIFromPreferences().catch((error) => {
         console.error('[WebUI] Failed to auto-restore:', error);
       });
@@ -637,7 +634,7 @@ void app
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  // 当关闭到托盘启用时，不退出应用 / Don't quit when close-to-tray is enabled
+  // Don't quit when close-to-tray is enabled
   if (getCloseToTrayEnabled()) {
     return;
   }
@@ -654,7 +651,7 @@ app.on('activate', () => {
   if (!appReadyDone) return;
   if (!isWebUIMode && app.isReady()) {
     if (mainWindow && !mainWindow.isDestroyed()) {
-      // 从托盘恢复隐藏的窗口 / Restore hidden window from tray
+      // Restore hidden window from tray
       showAndFocusMainWindow(mainWindow);
       if (process.platform === 'darwin' && app.dock) {
         void app.dock.show();

@@ -88,8 +88,8 @@ export function getBunGlobalBinDir(): string {
  * Environment variables to inherit from user's shell.
  * These may not be available when Electron app starts from Finder/launchd.
  *
- * 需要从用户 shell 继承的环境变量。
- * 当 Electron 应用从 Finder/launchd 启动时，这些变量可能不可用。
+ * shell
+ * Electron Finder/launchd
  */
 const SHELL_INHERITED_ENV_VARS = [
   'PATH', // Required for finding CLI tools (e.g., ~/.npm-global/bin, ~/.nvm/...)
@@ -156,8 +156,8 @@ function resolveLoginShell(): string {
  * Load environment variables from user's login shell.
  * Captures variables set in .bashrc, .zshrc, .bash_profile, etc.
  *
- * 从用户的登录 shell 加载环境变量。
- * 捕获 .bashrc、.zshrc、.bash_profile 等配置中设置的变量。
+ * shell
+ * .bashrc.zshrc.bash_profile
  */
 function loadShellEnvironment(): Record<string, string> {
   if (cachedShellEnv !== null) {
@@ -221,8 +221,7 @@ function loadShellEnvironment(): Record<string, string> {
  * Async version of loadShellEnvironment() for preloading at app startup.
  * Uses async exec instead of execSync to avoid blocking the main process.
  *
- * 异步版本的 loadShellEnvironment()，用于应用启动时预加载。
- * 使用异步 exec 替代 execSync，避免阻塞主进程。
+ * exec execSync
  */
 export async function loadShellEnvironmentAsync(): Promise<Record<string, string>> {
   if (cachedShellEnv !== null) {
@@ -292,7 +291,6 @@ export async function loadShellEnvironmentAsync(): Promise<Record<string, string
 /**
  * Merge two PATH strings, removing duplicates while preserving order.
  *
- * 合并两个 PATH 字符串，去重并保持顺序。
  */
 export function mergePaths(path1?: string, path2?: string): string {
   const separator = process.platform === 'win32' ? ';' : ':';
@@ -329,7 +327,6 @@ export function mergePaths(path1?: string, path2?: string): string {
  * tool paths (e.g. npm global packages, nvm-windows, Scoop, Volta) that are
  * added to PATH only when a shell session starts.
  *
- * 扫描 Windows 常见工具安装目录，返回当前 PATH 中缺少的路径。
  */
 function getWindowsExtraToolPaths(): string[] {
   if (process.platform !== 'win32') return [];
@@ -427,20 +424,16 @@ function getPosixExtraToolPaths(): string[] {
  * On Windows, also appends well-known tool paths (npm globals, nvm, volta, scoop)
  * that may not be present when Electron starts from a shortcut.
  *
- * 获取增强的环境变量，合并 shell 环境变量和 process.env。
- * 对于 PATH，合并两个来源以确保无论应用如何启动都能找到 CLI 工具。
- * 在 Windows 上，还会追加常见工具路径（npm 全局包、nvm、volta、scoop 等）。
+ * shell process.env
  */
 export function getEnhancedEnv(customEnv?: Record<string, string>): Record<string, string> {
   const shellEnv = loadShellEnvironment();
   const separator = process.platform === 'win32' ? ';' : ':';
 
   // Merge PATH from both sources (shell env may miss nvm/fnm paths in dev mode)
-  // 合并两个来源的 PATH（开发模式下 shell 环境可能缺少 nvm/fnm 路径）
   let mergedPath = mergePaths(process.env.PATH, shellEnv.PATH);
 
   // On Windows, also append any discovered tool paths not already in PATH
-  // 在 Windows 上，追加未在 PATH 中的常见工具路径
   const winExtraPaths = getWindowsExtraToolPaths();
   if (winExtraPaths.length > 0) {
     mergedPath = mergePaths(mergedPath, winExtraPaths.join(';'));

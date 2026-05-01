@@ -139,10 +139,9 @@ export function buildCodexAddArgs(server: IMcpServer): string[] | null {
 }
 
 /**
- * Codex CLI MCP代理实现
+ * Codex CLI MCP
  *
- * 使用 Codex CLI 的 mcp 子命令管理 MCP 服务器配置
- * Codex CLI 支持 stdio 和 streamable HTTP (via --url) 传输类型
+ * Codex CLI stdio streamable HTTP (via --url)
  */
 export class CodexMcpAgent extends AbstractMcpAgent {
   constructor() {
@@ -155,7 +154,7 @@ export class CodexMcpAgent extends AbstractMcpAgent {
   }
 
   /**
-   * 检测 Codex CLI 的 MCP 配置
+   * Codex CLI MCP
    */
   detectMcpServers(_cliPath?: string): Promise<IMcpServer[]> {
     const detectOperation = async () => {
@@ -195,7 +194,7 @@ export class CodexMcpAgent extends AbstractMcpAgent {
   }
 
   /**
-   * 安装 MCP 服务器到 Codex CLI
+   * MCP Codex CLI
    */
   installMcpServers(mcpServers: IMcpServer[]): Promise<McpOperationResult> {
     const installOperation = async () => {
@@ -240,7 +239,7 @@ export class CodexMcpAgent extends AbstractMcpAgent {
   }
 
   /**
-   * 从 Codex CLI 删除 MCP 服务器
+   * Codex CLI MCP
    */
   removeMcpServer(mcpServerName: string): Promise<McpOperationResult> {
     const removeOperation = async () => {
@@ -260,7 +259,6 @@ export class CodexMcpAgent extends AbstractMcpAgent {
               ...getExecEnv(),
             });
 
-            // 检查输出确认删除成功
             if (result.stdout && (result.stdout.includes('removed') || result.stdout.includes('Removed'))) {
               console.log(`[CodexMcpAgent] Removed MCP server: ${candidateName}`);
               return { success: true };
@@ -270,7 +268,6 @@ export class CodexMcpAgent extends AbstractMcpAgent {
               continue;
             }
 
-            // 其他情况认为成功（向后兼容）
             return { success: true };
           } catch (cmdError) {
             const errorText = [

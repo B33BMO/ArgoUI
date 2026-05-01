@@ -15,9 +15,8 @@ import { authRateLimiter, authenticatedActionLimiter, apiRateLimiter } from '../
 import { verifyQRTokenDirect } from '@process/bridge/webuiQR';
 
 /**
- * QR 登录页面 HTML（静态，不包含用户输入）
  * QR login page HTML (static, no user input embedded)
- * JavaScript 直接从 URL 参数读取 token，避免 XSS
+ * JavaScript URL token XSS
  * JavaScript reads token directly from URL params to prevent XSS
  */
 const QR_LOGIN_PAGE_HTML = `<!DOCTYPE html>
@@ -64,7 +63,6 @@ const QR_LOGIN_PAGE_HTML = `<!DOCTYPE html>
           container.innerHTML = '<h2 class="success">Login Successful!</h2><p>Redirecting... / 登录成功，正在跳转...</p>';
           setTimeout(function() { window.location.href = '/'; }, 1000);
         } else {
-          // XSS 安全修复：使用 textContent 而非 innerHTML 插入错误消息
           // XSS Security fix: Use textContent instead of innerHTML for error message
           var h2 = document.createElement('h2');
           h2.className = 'error';
@@ -87,16 +85,14 @@ const QR_LOGIN_PAGE_HTML = `<!DOCTYPE html>
 </html>`;
 
 /**
- * 注册认证相关路由
  * Register authentication routes
  */
 export function registerAuthRoutes(app: Express): void {
   /**
-   * 用户登录 - Login endpoint
+   * - Login endpoint
    * POST /login
    */
   // Login attempts are strictly rate limited to defend against brute force
-  // 登录尝试严格限流，防止暴力破解
   app.post('/login', authRateLimiter, AuthMiddleware.validateLoginInput, async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
@@ -129,7 +125,7 @@ export function registerAuthRoutes(app: Express): void {
       // Update last login
       await UserRepository.updateLastLogin(user.id);
 
-      // Set secure cookie（远程模式下启用 secure 标志）
+      // Set secure cookie
       // Set secure cookie (enable secure flag in remote mode)
       res.cookie(AUTH_CONFIG.COOKIE.NAME, token, {
         ...getCookieOptions(req),
@@ -152,18 +148,17 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   /**
-   * 用户登出 - Logout endpoint
+   * - Logout endpoint
    * POST /logout
    */
   // Authenticated endpoints reuse shared limiter keyed by user/IP
-  // 已登录接口复用按用户/IP 计数的限流器
   app.post(
     '/logout',
     apiRateLimiter,
     AuthMiddleware.authenticateToken,
     authenticatedActionLimiter,
     (req: Request, res: Response) => {
-      // 将当前 token 加入黑名单 / Blacklist current token
+      // Blacklist current token
       const token = TokenUtils.extractFromRequest(req);
       if (token) {
         AuthService.blacklistToken(token);
@@ -175,11 +170,10 @@ export function registerAuthRoutes(app: Express): void {
   );
 
   /**
-   * 获取认证状态 - Get authentication status
+   * - Get authentication status
    * GET /api/auth/status
    */
   // Rate limit auth status endpoint to prevent enumeration
-  // 为认证状态端点添加速率限制以防止枚举攻击
   app.get('/api/auth/status', apiRateLimiter, (_req: Request, res: Response) => {
     Promise.all([UserRepository.hasUsers(), UserRepository.countUsers()])
       .then(([hasUsers, userCount]) => {
@@ -200,11 +194,10 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   /**
-   * 获取当前用户信息 - Get current user (protected route)
+   * - Get current user (protected route)
    * GET /api/auth/user
    */
   // Add rate limiting for authenticated user info endpoint
-  // 为已认证用户信息端点添加速率限制
   app.get(
     '/api/auth/user',
     apiRateLimiter,
@@ -219,7 +212,7 @@ export function registerAuthRoutes(app: Express): void {
   );
 
   /**
-   * 修改密码 - Change password endpoint (protected route)
+   * - Change password endpoint (protected route)
    * POST /api/auth/change-password
    */
   app.post(
@@ -292,7 +285,7 @@ export function registerAuthRoutes(app: Express): void {
   );
 
   /**
-   * Token 刷新 - Token refresh endpoint
+   * Token - Token refresh endpoint
    * POST /api/auth/refresh
    */
   app.post('/api/auth/refresh', apiRateLimiter, authenticatedActionLimiter, (req: Request, res: Response) => {
@@ -340,14 +333,14 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   /**
-   * 生成 WebSocket Token - Generate WebSocket token
+   * WebSocket Token - Generate WebSocket token
    * GET /api/ws-token
    *
-   * 注意：现在 WebSocket 直接复用主 token，此接口返回主 token 以保持向后兼容
+   * WebSocket token token
    * Note: WebSocket now reuses the main token, this endpoint returns the main token for backward compatibility
    */
   // Rate limit WebSocket token endpoint
-  // 为 WebSocket token 端点添加速率限制
+  // WebSocket token
   app.get('/api/ws-token', apiRateLimiter, authenticatedActionLimiter, async (req: Request, res: Response, next) => {
     try {
       const sessionToken = TokenUtils.extractFromRequest(req);
@@ -366,11 +359,11 @@ export function registerAuthRoutes(app: Express): void {
         return next(createAppError('Unauthorized: User not found', 401, 'unauthorized'));
       }
 
-      // 直接返回主 token，不再生成单独的 WebSocket token
+      // token WebSocket token
       res.json({
         success: true,
-        wsToken: sessionToken, // 复用主 token
-        expiresIn: AUTH_CONFIG.TOKEN.COOKIE_MAX_AGE, // 使用主 token 的过期时间
+        wsToken: sessionToken, // token
+        expiresIn: AUTH_CONFIG.TOKEN.COOKIE_MAX_AGE, // token
       });
     } catch (error) {
       next(error);
@@ -378,7 +371,7 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   /**
-   * 二维码登录验证 - QR code login verification
+   * - QR code login verification
    * POST /api/auth/qr-login
    */
   app.post('/api/auth/qr-login', authRateLimiter, async (req: Request, res: Response) => {
@@ -393,11 +386,10 @@ export function registerAuthRoutes(app: Express): void {
         return;
       }
 
-      // 获取客户端 IP（用于本地网络限制验证）
       // Get client IP (for local network restriction verification)
       const clientIP = req.ip || req.socket.remoteAddress || '';
 
-      // 直接验证 QR token（无需 IPC）/ Verify QR token directly (no IPC)
+      // QR token/ Verify QR token directly (no IPC)
       const result = await verifyQRTokenDirect(qrToken, clientIP);
 
       if (!result.success || !result.data) {
@@ -408,7 +400,7 @@ export function registerAuthRoutes(app: Express): void {
         return;
       }
 
-      // 设置 session cookie（远程模式下启用 secure 标志）
+      // session cookie
       // Set session cookie (enable secure flag in remote mode)
       res.cookie(AUTH_CONFIG.COOKIE.NAME, result.data.sessionToken, {
         ...getCookieOptions(req),
@@ -430,9 +422,9 @@ export function registerAuthRoutes(app: Express): void {
   });
 
   /**
-   * 二维码登录页面 - QR code login page
+   * - QR code login page
    * GET /qr-login
-   * 安全处理：返回静态 HTML，JavaScript 从 URL 读取 token，避免 XSS
+   * HTMLJavaScript URL token XSS
    * Security: Return static HTML, JavaScript reads token from URL to prevent XSS
    */
   app.get('/qr-login', (_req: Request, res: Response) => {

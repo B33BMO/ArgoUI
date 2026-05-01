@@ -459,7 +459,7 @@ try {
   // 5b. Prepare aionrs binary (Rust CLI for agent integration)
   prepareAionrs();
 
-  // 6. 运行 electron-builder 生成分发包（DMG/ZIP/EXE等）
+  // 6. electron-builder
   // Run electron-builder to create distributables (DMG/ZIP/EXE, etc.)
   // Always disable auto-publish to avoid electron-builder's implicit tag-based publishing
   // Publishing is handled by a separate release job in CI
@@ -477,29 +477,25 @@ try {
     `📦 Compression level: ${process.env.ELECTRON_BUILDER_COMPRESSION_LEVEL} (${isCI ? 'CI build' : 'local build'})`
   );
 
-  // 根据模式添加架构标志
   // Add arch flags based on mode
   let archFlag = '';
   if (multiArch) {
-    // 多架构模式：将所有架构标志传递给 electron-builder
+    // electron-builder
     // Multi-arch mode: pass all arch flags to electron-builder
     archFlag = archArgs.map((arch) => `--${arch}`).join(' ');
     console.log(`🚀 Packaging for multiple architectures: ${archArgs.join(', ')}...`);
   } else {
-    // 单架构模式：使用确定的目标架构
     // Single arch mode: use the determined target arch
     archFlag = `--${targetArch}`;
     console.log(`🚀 Creating distributables for ${targetArch}...`);
   }
 
-  // 为 Windows 构建添加架构检测脚本
   // Add architecture detection scripts for Windows builds
-  // 使用 .onVerifyInstDir 避免与 electron-builder 冲突
+  // .onVerifyInstDir electron-builder
   // Use .onVerifyInstDir to avoid conflicts with electron-builder
   let nsisInclude = '';
   if (builderArgs.includes('--win') || builderArgs.includes('--all')) {
     if (!multiArch) {
-      // 单架构构建：添加对应架构的检测脚本
       // Single-arch build: Add architecture-specific detection script
       if (targetArch === 'arm64') {
         const arm64Script = 'resources/windows-installer-arm64.nsh';
@@ -515,7 +511,6 @@ try {
         }
       }
     }
-    // 多架构构建：暂不支持架构检测脚本
     // Multi-arch builds: Architecture detection not supported yet
   }
 

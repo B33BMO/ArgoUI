@@ -47,17 +47,15 @@ import { waitForMcpReady } from '@process/team/mcpReadiness';
 
 /**
  * ACP available command type - subset of SlashCommandItem for ACP protocol layer
- * ACP 可用命令类型 - SlashCommandItem 的子集，用于 ACP 协议层
  */
 export type AcpAvailableCommand = Pick<SlashCommandItem, 'name' | 'description' | 'hint'>;
 
 /**
  * Helper function to normalize tool call status
- * 辅助函数：规范化工具调用状态
  *
  * Note: This preserves the original behavior of (status as any) || 'pending'
  * Only converts falsy values to 'pending', keeps all truthy values unchanged
- * 注意：保持原始行为，只将 falsy 值转换为 'pending'，保留所有 truthy 值
+ * falsy 'pending' truthy
  */
 function normalizeToolCallStatus(status: string | undefined): 'pending' | 'in_progress' | 'completed' | 'failed' {
   // Matches original: (status as any) || 'pending'
@@ -84,13 +82,13 @@ export interface AcpAgentConfig {
     customArgs?: string[];
     customEnv?: Record<string, string>;
     yoloMode?: boolean;
-    /** Display name for the agent (from extension or custom config) / Agent 显示名称 */
+    /** Display name for the agent (from extension or custom config)*/
     agentName?: string;
-    /** ACP session ID for resume support / ACP session ID 用于会话恢复 */
+    /** ACP session ID for resume support*/
     acpSessionId?: string;
-    /** Conversation ID that owns the ACP session / 拥有该 ACP session 的会话 ID */
+    /** Conversation ID that owns the ACP session*/
     acpSessionConversationId?: string;
-    /** Last update time of ACP session / ACP session 最后更新时间 */
+    /** Last update time of ACP session*/
     acpSessionUpdatedAt?: number;
     /** Initial model ID to apply at session start (from channel config or persisted user choice) */
     currentModelId?: string;
@@ -102,14 +100,14 @@ export interface AcpAgentConfig {
     pendingConfigOptions?: Record<string, string>;
   };
   onStreamEvent: (data: IResponseMessage) => void;
-  onSignalEvent?: (data: IResponseMessage) => void; // 新增：仅发送信号，不更新UI
-  /** Callback when ACP session ID is updated / 当 ACP session ID 更新时的回调 */
+  onSignalEvent?: (data: IResponseMessage) => void;
+  /** Callback when ACP session ID is updated*/
   onSessionIdUpdate?: (sessionId: string) => void;
-  /** Callback when ACP agent updates available slash commands / ACP 可用斜杠命令更新回调 */
+  /** Callback when ACP agent updates available slash commands*/
   onAvailableCommandsUpdate?: (commands: AcpAvailableCommand[]) => void;
 }
 
-// ACP agent任务类
+// ACP agent
 export class AcpAgent {
   private readonly id: string;
   private extra: {
@@ -120,13 +118,13 @@ export class AcpAgent {
     customArgs?: string[];
     customEnv?: Record<string, string>;
     yoloMode?: boolean;
-    /** Display name for the agent (from extension or custom config) / Agent 显示名称 */
+    /** Display name for the agent (from extension or custom config)*/
     agentName?: string;
-    /** ACP session ID for resume support / ACP session ID 用于会话恢复 */
+    /** ACP session ID for resume support*/
     acpSessionId?: string;
-    /** Conversation ID that owns the ACP session / 拥有该 ACP session 的会话 ID */
+    /** Conversation ID that owns the ACP session*/
     acpSessionConversationId?: string;
-    /** Last update time of ACP session / ACP session 最后更新时间 */
+    /** Last update time of ACP session*/
     acpSessionUpdatedAt?: number;
     /** Initial model ID to apply at session start (from channel config or persisted user choice) */
     currentModelId?: string;
@@ -150,7 +148,6 @@ export class AcpAgent {
   private readonly onAvailableCommandsUpdate?: (commands: AcpAvailableCommand[]) => void;
 
   // Track pending navigation tool calls for URL extraction from results
-  // 跟踪待处理的导航工具调用，以便从结果中提取 URL
   private pendingNavigationTools = new Set<string>();
 
   // ApprovalStore for session-level "always allow" caching
@@ -224,7 +221,7 @@ export class AcpAgent {
 
   /**
    * Check if a tool is a chrome-devtools navigation tool
-   * 检查工具是否为 chrome-devtools 导航工具
+   * chrome-devtools
    *
    * Delegates to NavigationInterceptor for unified logic
    */
@@ -234,7 +231,6 @@ export class AcpAgent {
 
   /**
    * Extract URL from navigation tool's permission request data
-   * 从导航工具的权限请求数据中提取 URL
    *
    * Delegates to NavigationInterceptor for unified logic
    */
@@ -249,7 +245,6 @@ export class AcpAgent {
 
   /**
    * Handle intercepted navigation tool by emitting preview_open event
-   * 处理被拦截的导航工具，发出 preview_open 事件
    */
   private handleInterceptedNavigation(url: string, _toolName: string): void {
     const previewMessage = NavigationInterceptor.createPreviewMessage(url, this.id);
@@ -264,7 +259,6 @@ export class AcpAgent {
     return 70000;
   }
 
-  // 启动ACP连接和会话
   async start(): Promise<void> {
     const startTotal = Date.now();
     try {
@@ -325,7 +319,6 @@ export class AcpAgent {
       await this.performAuthentication();
       console.log(`[ACP-PERF] start: authentication completed ${Date.now() - authStart}ms`);
 
-      // 避免重复创建会话：仅当尚无活动会话时再创建
       // Create new session or resume existing one (if ACP backend supports it)
       if (!this.connection.hasActiveSession) {
         const sessionStart = Date.now();
@@ -631,7 +624,6 @@ export class AcpAgent {
     });
   }
 
-  // 发送消息到ACP服务器
   async sendMessage(data: { content: string; files?: string[]; msg_id?: string }): Promise<AcpResult> {
     const sendStart = Date.now();
     try {
@@ -668,13 +660,11 @@ export class AcpAgent {
 
       // Add @ prefix to ALL uploaded files (including images) with FULL PATH
       // Claude CLI needs full path to read files
-      // 为所有上传的文件添加 @ 前缀（包括图片），使用完整路径让 Claude CLI 读取
       if (data.files && data.files.length > 0) {
         const fileRefs = data.files
           .map((filePath) => {
             // Use full path instead of just filename
             // Escape paths with spaces using quotes for Claude CLI
-            // 对含空格的路径使用引号包裹，确保 Claude CLI 正确解析
             if (filePath.includes(' ')) {
               return `@"${filePath}"`;
             }
@@ -686,7 +676,6 @@ export class AcpAgent {
       }
 
       // Process @ file references in the message
-      // 处理消息中的 @ 文件引用
       const atFileStart = Date.now();
       processedContent = await this.processAtFileReferences(processedContent, data.files);
       const atFileDuration = Date.now() - atFileStart;
@@ -794,11 +783,9 @@ export class AcpAgent {
 
   /**
    * Process @ file references in the message content
-   * 处理消息内容中的 @ 文件引用
    *
    * This method resolves @ references to actual files in the workspace,
    * reads their content, and appends it to the message.
-   * 此方法解析工作区中的 @ 引用，读取文件内容并附加到消息中。
    */
   private async processAtFileReferences(content: string, uploadedFiles?: string[]): Promise<string> {
     const workspace = this.extra.workspace;
@@ -808,8 +795,7 @@ export class AcpAgent {
 
     // Parse all @ references in the content
     // Note: @ prefix is already added to content by sendMessage for uploaded files
-    // 解析 content 中的所有 @ 引用
-    // 注意：sendMessage 已为上传的文件添加了 @ 前缀
+    // content @
     const parts = parseAllAtCommands(content);
     const atPaths = extractAtPaths(content);
 
@@ -826,7 +812,6 @@ export class AcpAgent {
     for (const atPath of atPaths) {
       // Check if this @ reference is an uploaded file (full path or filename)
       // If yes, skip it - let Claude CLI handle it natively
-      // 检查此 @ 引用是否是上传的文件（完整路径或文件名），如果是则跳过，让 Claude CLI 原生处理
       const matchedUploadFile = uploadedFiles?.find((filePath) => {
         // Match by full path
         if (atPath === filePath) return true;
@@ -838,7 +823,6 @@ export class AcpAgent {
       if (matchedUploadFile) {
         // If this is a filename reference (not full path), mark for removal
         // The full path reference will be kept
-        // 如果这是文件名引用（不是完整路径），标记为移除，因为已经有完整路径引用了
         if (atPath !== matchedUploadFile) {
           referencesToRemove.add(atPath);
         }
@@ -848,7 +832,6 @@ export class AcpAgent {
       }
 
       // For workspace file references (filename only), try to resolve and read
-      // 对于工作区文件引用（只有文件名），尝试解析和读取
       const resolvedPath = await this.resolveAtPath(atPath, workspace);
 
       if (resolvedPath) {
@@ -859,7 +842,6 @@ export class AcpAgent {
         } catch (error) {
           // Binary files (images, etc.) cannot be read as text
           // Keep the @ reference as-is, let CLI handle it
-          // 二进制文件（图片等）无法作为文本读取，保持 @ 引用，让 CLI 处理
           console.warn(`[ACP] Skipping binary file ${atPath} (will be handled by CLI)`);
         }
       }
@@ -899,7 +881,6 @@ export class AcpAgent {
 
   /**
    * Resolve an @ path to an actual file path in the workspace
-   * 将 @ 路径解析为工作区中的实际文件路径
    */
   private async resolveAtPath(atPath: string, workspace: string): Promise<string | null> {
     // Try direct path first
@@ -927,7 +908,6 @@ export class AcpAgent {
 
   /**
    * Simple file search in workspace (non-recursive for performance)
-   * 在工作区中简单搜索文件（非递归以保证性能）
    */
   private async findFileInWorkspace(workspace: string, fileName: string, maxDepth: number = 3): Promise<string | null> {
     const searchDir = async (dir: string, depth: number): Promise<string | null> => {
@@ -1012,37 +992,32 @@ export class AcpAgent {
       }
 
       // Intercept chrome-devtools navigation tools from session updates
-      // 从会话更新中拦截 chrome-devtools 导航工具
+      // chrome-devtools
       if (data.update?.sessionUpdate === 'tool_call') {
         const toolCallUpdate = data as ToolCallUpdate;
         const toolName = toolCallUpdate.update?.title || '';
         const toolCallId = toolCallUpdate.update?.toolCallId;
         if (this.isNavigationTool(toolName)) {
           // Track this navigation tool call for result interception
-          // 跟踪此导航工具调用以拦截结果
           if (toolCallId) {
             this.pendingNavigationTools.add(toolCallId);
           }
           const url = this.extractNavigationUrl(toolCallUpdate.update);
           if (url) {
             // Emit preview_open event to show URL in preview panel
-            // 发出 preview_open 事件，在预览面板中显示 URL
             this.handleInterceptedNavigation(url, toolName);
           }
         }
       }
 
       // Intercept tool_call_update to extract URL from navigation tool results
-      // 拦截 tool_call_update 以从导航工具结果中提取 URL
       if (data.update?.sessionUpdate === 'tool_call_update') {
         const statusUpdate = data as import('@/common/types/acpTypes').ToolCallUpdateStatus;
         const toolCallId = statusUpdate.update?.toolCallId;
         if (toolCallId && this.pendingNavigationTools.has(toolCallId)) {
           // This is a result for a tracked navigation tool
-          // 这是已跟踪的导航工具的结果
           if (statusUpdate.update?.status === 'completed' && statusUpdate.update?.content) {
             // Try to extract URL from the result content
-            // 尝试从结果内容中提取 URL
             for (const item of statusUpdate.update.content) {
               const text = item.content?.text || '';
               const urlMatch = text.match(/https?:\/\/[^\s<>"]+/i);
@@ -1053,7 +1028,6 @@ export class AcpAgent {
             }
           }
           // Clean up tracking
-          // 清理跟踪
           this.pendingNavigationTools.delete(toolCallId);
         }
       }
@@ -1083,7 +1057,6 @@ export class AcpAgent {
 
       for (let i = 0; i < messages.length; i++) {
         const message = messages[i];
-        // 所有消息都直接发送，不做复杂的替换逻辑
         this.emitMessage(message);
       }
     } catch (error) {
@@ -1096,11 +1069,11 @@ export class AcpAgent {
   private handlePermissionRequest(data: AcpPermissionRequest): Promise<{ optionId: string }> {
     return new Promise((resolve, reject) => {
       // Ensure every permission request has a stable toolCallId so UI + pending map stay in sync
-      // 确保每个权限请求都拥有稳定的 toolCallId，保证 UI 与 pending map 对齐
+      // toolCallId UI pending map
       if (data.toolCall && !data.toolCall.toolCallId) {
         data.toolCall.toolCallId = uuid();
       }
-      const requestId = data.toolCall.toolCallId; // 使用 toolCallId 作为 requestId
+      const requestId = data.toolCall.toolCallId; // toolCallId requestId
 
       // Check ApprovalStore for cached "always allow" decision
       // Workaround for claude-agent-acp bug: it returns updatedPermissions but doesn't check suggestions
@@ -1125,25 +1098,21 @@ export class AcpAgent {
       });
 
       // Intercept chrome-devtools navigation tools and show in preview panel
-      // 拦截 chrome-devtools 导航工具，在预览面板中显示
+      // chrome-devtools
       // Note: We only emit preview_open event, do NOT block tool execution
-      // 注意：只发送 preview_open 事件，不阻止工具执行，agent 需要 chrome-devtools 获取网页内容
+      // preview_open agent chrome-devtools
       const toolName = data.toolCall?.title || '';
       if (this.isNavigationTool(toolName)) {
         const url = this.extractNavigationUrl(data.toolCall);
         if (url) {
           // Emit preview_open event to show URL in preview panel
-          // 发出 preview_open 事件，在预览面板中显示 URL
           this.handleInterceptedNavigation(url, toolName);
         }
         // Track for later extraction from result if URL not available now
-        // 跟踪以便稍后从结果中提取 URL（如果现在不可用）
         this.pendingNavigationTools.add(requestId);
       }
 
-      // 检查是否有重复的权限请求
       if (this.pendingPermissions.has(requestId)) {
-        // 如果是重复请求，先清理旧的
         const oldRequest = this.pendingPermissions.get(requestId);
         if (oldRequest) {
           oldRequest.reject(new Error('Replaced by new permission request'));
@@ -1153,9 +1122,8 @@ export class AcpAgent {
 
       this.pendingPermissions.set(requestId, { resolve, reject });
 
-      // 确保权限消息总是被发送，即使有异步问题
       try {
-        this.emitPermissionRequest(data); // 直接传递 AcpPermissionRequest
+        this.emitPermissionRequest(data); // AcpPermissionRequest
       } catch (error) {
         this.pendingPermissions.delete(requestId);
         reject(error);
@@ -1182,7 +1150,6 @@ export class AcpAgent {
       );
     }
 
-    // 使用信号回调发送 end_turn 事件，不添加到消息列表
     if (this.onSignalEvent) {
       this.onSignalEvent({
         type: 'finish',
@@ -1336,10 +1303,10 @@ export class AcpAgent {
   }
 
   private emitPermissionRequest(data: AcpPermissionRequest): void {
-    // 重要：将权限请求中的 toolCall 注册到 adapter 的 activeToolCalls 中
-    // 这样后续的 tool_call_update 事件就能找到对应的 tool call 了
+    // toolCall adapter activeToolCalls
+    // tool_call_update tool call
     if (data.toolCall) {
-      // 将权限请求中的 kind 映射到正确的类型
+      // kind
       const mapKindToValidType = (kind?: string): 'read' | 'edit' | 'execute' => {
         switch (kind) {
           case 'read':
@@ -1349,7 +1316,7 @@ export class AcpAgent {
           case 'execute':
             return 'execute';
           default:
-            return 'execute'; // 默认为 execute
+            return 'execute'; // execute
         }
       };
 
@@ -1366,12 +1333,11 @@ export class AcpAgent {
         },
       };
 
-      // 创建 tool call 消息以注册到 activeToolCalls
+      // tool call activeToolCalls
       this.adapter.convertSessionUpdate(toolCallUpdate);
     }
 
-    // 使用 onSignalEvent 而不是 emitMessage，这样消息不会被持久化到数据库
-    // Permission request 是临时交互消息，一旦用户做出选择就失去意义
+    // Permission request
     if (this.onSignalEvent) {
       this.onSignalEvent({
         type: 'acp_permission',
@@ -1428,7 +1394,7 @@ export class AcpAgent {
       type: '', // Will be set in switch statement
       data: null, // Will be set in switch statement
       conversation_id: this.id,
-      msg_id: message.msg_id || message.id, // 使用消息自己的 msg_id
+      msg_id: message.msg_id || message.id,
     };
 
     // Map TMessage types to backend response types
@@ -1499,7 +1465,7 @@ export class AcpAgent {
 
   /**
    * Get the current ACP session ID (for session resume support).
-   * 获取当前 ACP session ID（用于会话恢复支持）。
+   * ACP session ID
    */
   get currentSessionId(): string | null {
     return this.connection.currentSessionId;
@@ -1507,7 +1473,7 @@ export class AcpAgent {
 
   /**
    * Create a new session or resume an existing one, and notify upper layer if session ID changed.
-   * 创建新会话或恢复现有会话，如果 session ID 变化则通知上层。
+   * session ID
    *
    * Resume strategy is delegated to AcpConnection.resumeSession()
    * (capability-driven with Claude-compatible resume path).
@@ -1657,7 +1623,6 @@ export class AcpAgent {
 
   /**
    * Set the session mode for this agent (e.g., plan, default, bypassPermissions, yolo).
-   * 设置此代理的会话模式（如 plan、default、bypassPermissions、yolo）。
    *
    * @param mode - The mode ID to set
    * @returns Promise that resolves when mode is set
@@ -1683,12 +1648,11 @@ export class AcpAgent {
     try {
       this.emitStatusMessage('connecting');
 
-      // 使用配置的 CLI 路径调用 login 命令
+      // CLI login
       if (!this.extra.cliPath) {
         throw new Error(`No CLI path configured for ${backend} backend`);
       }
 
-      // 使用与 AcpConnection 相同的命令解析逻辑
       const cleanEnv = getEnhancedEnv();
       let command: string;
       let args: string[];
@@ -1723,7 +1687,6 @@ export class AcpAgent {
       });
     } catch (error) {
       console.warn(`${backend} auth refresh failed, will try to connect anyway:`, error);
-      // 不抛出错误，让连接尝试继续
     }
   }
 
@@ -1746,17 +1709,15 @@ export class AcpAgent {
         return;
       }
 
-      // 先尝试直接创建session以判断是否已鉴权（同时尝试恢复已有会话）
+      // session
       // Try to create/resume session to check if already authenticated
       try {
         await this.createOrResumeSession();
         this.emitStatusMessage('authenticated');
         return;
       } catch (_err) {
-        // 需要鉴权，进行条件化"预热"尝试
       }
 
-      // 条件化预热：仅在需要鉴权时尝试调用后端CLI登录以刷新token
       if (this.extra.backend === 'qwen') {
         await this.ensureQwenAuth();
       } else if (this.extra.backend === 'claude') {
@@ -1764,7 +1725,7 @@ export class AcpAgent {
       }
       // Note: CodeBuddy does not have a CLI login command; auth is handled by the CLI itself
 
-      // 预热后重试创建session（同时尝试恢复会话）
+      // session
       // Retry creating/resuming session after warmup
       try {
         await this.createOrResumeSession();
@@ -1772,7 +1733,6 @@ export class AcpAgent {
         return;
       } catch (error) {
         // If still failing, guide user to login manually
-        // 如果仍然失败，引导用户手动登录
         this.emitStatusMessage('error');
       }
     } catch (error) {

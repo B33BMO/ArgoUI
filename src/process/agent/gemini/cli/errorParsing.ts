@@ -14,16 +14,14 @@ import {
 } from '@office-ai/aioncli-core';
 
 /**
- * 检查错误是否为 Pro 模型配额超限错误
  * Check if error is a Pro model quota exceeded error
  *
- * aioncli-core v0.18.4 移除了 isProQuotaExceededError，本地实现替代
+ * aioncli-core v0.18.4 isProQuotaExceededError
  * isProQuotaExceededError was removed in aioncli-core v0.18.4, local implementation
  */
 function isProQuotaExceededError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
 
-  // 检查是否包含 Pro 模型相关的配额错误信息
   const errorStr = JSON.stringify(error).toLowerCase();
   return (
     errorStr.includes('quota') &&
@@ -32,16 +30,14 @@ function isProQuotaExceededError(error: unknown): boolean {
 }
 
 /**
- * 检查错误是否为通用配额超限错误
  * Check if error is a generic quota exceeded error
  *
- * aioncli-core v0.18.4 移除了 isGenericQuotaExceededError，本地实现替代
+ * aioncli-core v0.18.4 isGenericQuotaExceededError
  * isGenericQuotaExceededError was removed in aioncli-core v0.18.4, local implementation
  */
 function isGenericQuotaExceededError(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
 
-  // 检查是否包含配额相关错误
   const errorStr = JSON.stringify(error).toLowerCase();
   return (
     errorStr.includes('quota') &&

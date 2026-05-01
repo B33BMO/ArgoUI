@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// 集中管理 renderer 端的运行时补丁，使入口文件保持整洁
+// renderer
 // Centralize renderer runtime patches so the entry file stays tidy
 
 declare global {
@@ -24,7 +24,7 @@ const RESIZE_OBSERVER_PATTERNS = [
 ];
 
 // Silence Arco Design Message component key warnings (internal library issue)
-// 抑制 Arco Design Message 组件的 key 警告（第三方库内部问题）
+// Arco Design Message key
 const ARCO_MESSAGE_KEY_PATTERNS = [
   'each child in a list should have a unique "key" prop',
   'check the render method of `layout`',
@@ -32,7 +32,6 @@ const ARCO_MESSAGE_KEY_PATTERNS = [
 ];
 
 // Silence React 19 ref deprecation warnings from third-party libraries
-// 抑制第三方库中 React 19 ref 废弃警告（等待库更新）
 const REACT_19_REF_PATTERNS = ['accessing element.ref was removed in react 19', 'ref is now a regular prop'];
 
 const extractMessage = (value: unknown): string | undefined => {
@@ -61,7 +60,7 @@ const patchGlobalErrorListeners = () => {
   const listenerMap = new WeakMap<EventListenerOrEventListenerObject, EventListenerOrEventListenerObject>();
 
   // Hook the top-level error listeners so we can filter ResizeObserver noise before
-  // Arco overlays run (避免在 overlay 触发前就被 ResizeObserver 循环警告刷屏，同时保留真实报错).
+  // Arco overlays run
   window.addEventListener = ((type: any, listener: any, options: any) => {
     if ((type === 'error' || type === 'unhandledrejection') && listener) {
       const wrapped: EventListenerOrEventListenerObject = (event: any) => {
@@ -95,7 +94,7 @@ const patchGlobalErrorListeners = () => {
 
 const patchResizeObserver = () => {
   // Wrap ResizeObserver callbacks in requestAnimationFrame to break the feedback loop that
-  // browsers treat as "ResizeObserver loop" (在下一帧执行回调，可彻底规避 ResizeObserver loop limit 警告).
+  // browsers treat as "ResizeObserver loop"
   if (!window.__AionSafeResizeObserver__ && typeof ResizeObserver !== 'undefined') {
     const NativeResizeObserver = window.ResizeObserver;
     class SafeResizeObserver extends NativeResizeObserver {
@@ -123,7 +122,6 @@ const patchResizeObserver = () => {
 
 const patchGlobalErrorFilters = () => {
   // Global error/rejection filter: quietly drop known RO-loop messages but keep other errors
-  // (全局过滤 ResizeObserver 循环提示，只忽略白名单消息，其余错误依然向外抛出).
   if (!window.__AionResizeObserverPatched__) {
     const errorHandler = (event: ErrorEvent) => {
       if (shouldSilence(extractMessage(event.error) ?? event.message)) {
@@ -144,7 +142,7 @@ const patchGlobalErrorFilters = () => {
 };
 
 const patchConsole = () => {
-  // Console patch mirrors the listener filters so devtools logs stay clean（控制台同样做拦截，防止被重复警告淹没）.
+  // Console patch mirrors the listener filters so devtools logs stay clean
   if (typeof console !== 'undefined' && !console.__AionResizeObserverPatched__) {
     const rawError = console.error.bind(console);
     console.error = (...args: unknown[]) => {

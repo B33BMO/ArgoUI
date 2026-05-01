@@ -8,16 +8,16 @@ import { EventEmitter } from 'events';
 import type { IResponseMessage } from '@/common/adapter/ipcBridge';
 
 /**
- * Channel 全局事件类型
+ * Channel
  * Channel global event types
  */
 export const ChannelEvents = {
-  /** Agent 消息事件 / Agent message event */
+  /*Agent message event*/
   AGENT_MESSAGE: 'channel.agent.message',
 } as const;
 
 /**
- * Agent 消息事件数据
+ * Agent
  * Agent message event data
  */
 export interface IAgentMessageEvent extends IResponseMessage {
@@ -25,30 +25,25 @@ export interface IAgentMessageEvent extends IResponseMessage {
 }
 
 /**
- * ChannelEventBus - 全局事件总线
+ * ChannelEventBus
  *
- * 用于 Agent 消息的全局分发，解耦 ChannelMessageService 与 Agent Task
  *
  * Usage:
  * ```typescript
- * // 发送事件（在 GeminiAgentManager 等中）
  * channelEventBus.emitAgentMessage(conversationId, data);
  *
- * // 监听事件（在 ChannelMessageService 中）
  * channelEventBus.onAgentMessage((event) => {
- *   // 处理消息
  * });
  * ```
  */
 class ChannelEventBus extends EventEmitter {
   constructor() {
     super();
-    // 增加监听器上限，避免警告
     this.setMaxListeners(100);
   }
 
   /**
-   * 发送 Agent 消息事件
+   * Agent
    * Emit agent message event
    */
   emitAgentMessage(conversationId: string, data: IResponseMessage): void {
@@ -60,7 +55,7 @@ class ChannelEventBus extends EventEmitter {
   }
 
   /**
-   * 监听 Agent 消息事件
+   * Agent
    * Listen to agent message event
    */
   onAgentMessage(handler: (event: IAgentMessageEvent) => void): () => void {
@@ -71,7 +66,7 @@ class ChannelEventBus extends EventEmitter {
   }
 
   /**
-   * 移除 Agent 消息监听器
+   * Agent
    * Remove agent message listener
    */
   offAgentMessage(handler: (event: IAgentMessageEvent) => void): void {
@@ -79,5 +74,4 @@ class ChannelEventBus extends EventEmitter {
   }
 }
 
-// 单例
 export const channelEventBus = new ChannelEventBus();

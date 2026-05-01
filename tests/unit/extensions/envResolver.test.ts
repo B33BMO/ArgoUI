@@ -89,7 +89,6 @@ describe('extensions/envResolver', () => {
     expect(isGlobalStrictMode()).toBe(true);
 
     process.env[AIONUI_STRICT_ENV_ENV] = '0';
-    // 仍使用缓存值
     expect(isGlobalStrictMode()).toBe(true);
 
     clearStrictModeCache();

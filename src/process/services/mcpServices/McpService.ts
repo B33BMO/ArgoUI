@@ -17,12 +17,10 @@ import { AionrsMcpAgent } from './agents/AionrsMcpAgent';
 import type { IMcpProtocol, DetectedMcpServer, McpConnectionTestResult, McpSyncResult, McpSource } from './McpProtocol';
 
 /**
- * MCP服务 - 负责协调各个Agent的MCP操作协议
- * 新架构：只定义协议，具体实现由各个Agent类完成
  *
- * Agent 类型说明：
- * - AcpBackend ('claude', 'qwen', 'gemini', 'codex'等): 支持的 ACP 后端
- * - 'aionui': @office-ai/aioncli-core (AionUi 本地管理的 Gemini 实现)
+ * Agent
+ * - AcpBackend: ACP
+ * - 'aionui': @office-ai/aioncli-core
  */
 export class McpService {
   private agents: Map<McpSource, IMcpProtocol>;
@@ -47,7 +45,7 @@ export class McpService {
     const whichCommand = isWindows ? 'where' : 'which';
 
     // Keep original behavior: prefer where/which, then fallback on Windows to Get-Command.
-    // 保持原逻辑：优先使用 where/which，Windows 下失败再回退到 Get-Command。
+    // where/whichWindows Get-Command
     try {
       execSync(`${whichCommand} ${cliCommand}`, {
         encoding: 'utf-8',
@@ -62,7 +60,7 @@ export class McpService {
     if (isWindows) {
       try {
         // PowerShell fallback for shim scripts like *.ps1 (vfox)
-        // PowerShell 回退，支持 *.ps1 shim（例如 vfox）
+        // PowerShell *.ps1 shim
         execSync(
           `powershell -NoProfile -NonInteractive -Command "Get-Command -All ${cliCommand} | Select-Object -First 1 | Out-Null"`,
           {
@@ -86,7 +84,7 @@ export class McpService {
       ['codebuddy', new CodebuddyMcpAgent()],
       ['qwen', new QwenMcpAgent()],
       ['gemini', new GeminiMcpAgent()],
-      ['aionui', new AionuiMcpAgent()], // AionUi 本地 @office-ai/aioncli-core
+      ['aionui', new AionuiMcpAgent()], // AionUi @office-ai/aioncli-core
       ['codex', new CodexMcpAgent()],
       ['opencode', new OpencodeMcpAgent()],
       ['aionrs', new AionrsMcpAgent()], // Aion CLI (Rust binary, TOML config)
@@ -94,23 +92,23 @@ export class McpService {
   }
 
   /**
-   * 获取特定backend的agent实例
+   * backendagent
    */
   private getAgent(backend: McpSource): IMcpProtocol | undefined {
     return this.agents.get(backend);
   }
 
   /**
-   * 根据 agent 配置获取正确的 MCP agent 实例
-   * Fork Gemini (cliPath=undefined) 使用 AionuiMcpAgent
-   * Native Gemini (cliPath='gemini') 使用 GeminiMcpAgent
+   * agent MCP agent
+   * Fork Gemini (cliPath=undefined) AionuiMcpAgent
+   * Native Gemini (cliPath='gemini') GeminiMcpAgent
    *
    * Get the correct MCP agent instance based on agent config.
    * Fork Gemini (cliPath=undefined) uses AionuiMcpAgent.
    * Native Gemini (cliPath='gemini') uses GeminiMcpAgent.
    */
   private getAgentForConfig(agent: { backend: string; cliPath?: string }): IMcpProtocol | undefined {
-    // Fork Gemini 使用 AionuiMcpAgent 管理 MCP 配置
+    // Fork Gemini AionuiMcpAgent MCP
     // Fork Gemini uses AionuiMcpAgent to manage MCP config
     if (agent.backend === 'gemini' && !agent.cliPath) {
       return this.agents.get('aionui');
@@ -119,8 +117,8 @@ export class McpService {
   }
 
   /**
-   * 确保原生 Gemini CLI 在 agent 列表中（如果已安装但不在列表中）
-   * AcpDetector 返回的是 fork Gemini (cliPath=undefined)，但 MCP 操作需要同时处理原生 Gemini CLI
+   * Gemini CLI agent
+   * AcpDetector fork Gemini (cliPath=undefined) MCP Gemini CLI
    *
    * Ensure native Gemini CLI is in the agent list (if installed but not present).
    * AcpDetector returns fork Gemini (cliPath=undefined), but MCP operations need native Gemini CLI too.
@@ -189,10 +187,7 @@ export class McpService {
   }
 
   /**
-   * 从检测到的ACP agents中获取MCP配置（并发版本）
    *
-   * 注意：此方法还会额外检测原生 Gemini CLI 的 MCP 配置，
-   * 即使它在 ACP 配置中是禁用的（因为 fork 的 Gemini 用于 ACP）
    */
   getAgentMcpConfigs(
     agents: Array<{
@@ -202,10 +197,9 @@ export class McpService {
     }>
   ): Promise<DetectedMcpServer[]> {
     return this.withServiceLock(async () => {
-      // 创建完整的检测列表，包含 ACP agents 和额外的原生 Gemini CLI
+      // ACP agents Gemini CLI
       const allAgentsToCheck = this.addNativeGeminiIfNeeded(agents);
 
-      // 并发执行所有agent的MCP检测
       const promises = allAgentsToCheck.map(async (agent) => {
         try {
           const { agentInstance, source } = this.getDetectionTarget(agent);
@@ -247,10 +241,9 @@ export class McpService {
   }
 
   /**
-   * 测试MCP服务器连接
    */
   async testMcpConnection(server: IMcpServer): Promise<McpConnectionTestResult> {
-    // 使用第一个可用的agent进行连接测试，因为测试逻辑在基类中是通用的
+    // agent
     const firstAgent = this.agents.values().next().value;
     if (firstAgent) {
       return await firstAgent.testMcpConnection(server);
@@ -262,7 +255,6 @@ export class McpService {
   }
 
   /**
-   * 将MCP配置同步到所有检测到的agent
    */
   syncMcpToAgents(
     mcpServers: IMcpServer[],
@@ -272,7 +264,6 @@ export class McpService {
       cliPath?: string;
     }>
   ): Promise<McpSyncResult> {
-    // 只同步启用的MCP服务器
     const enabledServers = mcpServers.filter((server) => server.enabled);
 
     if (enabledServers.length === 0) {
@@ -280,14 +271,12 @@ export class McpService {
     }
 
     return this.withServiceLock(async () => {
-      // 确保原生 Gemini CLI 也在同步列表中
       // Ensure native Gemini CLI is also in the sync list
       const allAgents = this.addNativeGeminiIfNeeded(agents);
 
-      // 并发执行所有agent的MCP同步
       const promises = allAgents.map(async (agent) => {
         try {
-          // 使用 getAgentForConfig 来正确区分 fork Gemini 和 native Gemini
+          // getAgentForConfig fork Gemini native Gemini
           // Use getAgentForConfig to correctly distinguish fork Gemini from native Gemini
           const agentInstance = this.getAgentForConfig(agent);
           if (!agentInstance) {
@@ -322,7 +311,6 @@ export class McpService {
   }
 
   /**
-   * 从所有检测到的agent中删除MCP配置
    */
   removeMcpFromAgents(
     mcpServerName: string,
@@ -333,14 +321,12 @@ export class McpService {
     }>
   ): Promise<McpSyncResult> {
     return this.withServiceLock(async () => {
-      // 确保原生 Gemini CLI 也在删除列表中
       // Ensure native Gemini CLI is also in the removal list
       const allAgents = this.addNativeGeminiIfNeeded(agents);
 
-      // 并发执行所有agent的MCP删除
       const promises = allAgents.map(async (agent) => {
         try {
-          // 使用 getAgentForConfig 来正确区分 fork Gemini 和 native Gemini
+          // getAgentForConfig fork Gemini native Gemini
           // Use getAgentForConfig to correctly distinguish fork Gemini from native Gemini
           const agentInstance = this.getAgentForConfig(agent);
           if (!agentInstance) {

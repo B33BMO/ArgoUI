@@ -5,7 +5,6 @@
  */
 import type { CodexAgentEventType } from './eventTypes';
 
-// JSON-RPC 消息的泛型结构 - 使用 CodexEventMsg 自动推断类型
 export type CodexJsonRpcEvent<T extends CodexEventMsg['type'] = CodexEventMsg['type']> = {
   jsonrpc: '2.0';
   method: 'codex/event';
@@ -16,36 +15,36 @@ export type CodexJsonRpcEvent<T extends CodexEventMsg['type'] = CodexEventMsg['t
       source?: string;
     };
     id: string;
-    msg: Extract<CodexEventMsg, { type: T }>; // 直接从 CodexEventMsg 提取类型
+    msg: Extract<CodexEventMsg, { type: T }>; // CodexEventMsg
   };
 };
 
-// 精准的事件消息类型，直接对应 params.msg
+// params.msg
 export type CodexEventMsg =
-  | ({ type: 'session_configured' } & SessionConfiguredData) //忽略
-  | ({ type: 'task_started' } & TaskStartedData) //已处理
-  | ({ type: 'task_complete' } & TaskCompleteData) //已处理
-  | ({ type: 'agent_message_delta' } & MessageDeltaData) //已处理
-  | ({ type: 'agent_message' } & MessageData) //忽略
+  | ({ type: 'session_configured' } & SessionConfiguredData)
+  | ({ type: 'task_started' } & TaskStartedData)
+  | ({ type: 'task_complete' } & TaskCompleteData)
+  | ({ type: 'agent_message_delta' } & MessageDeltaData)
+  | ({ type: 'agent_message' } & MessageData)
   | ({ type: 'user_message' } & UserMessageData)
-  | ({ type: 'agent_reasoning_delta' } & AgentReasoningDeltaData) //已处理
-  | ({ type: 'agent_reasoning' } & AgentReasoningData) //忽略
+  | ({ type: 'agent_reasoning_delta' } & AgentReasoningDeltaData)
+  | ({ type: 'agent_reasoning' } & AgentReasoningData)
   | ({ type: 'agent_reasoning_raw_content' } & AgentReasoningRawContentData)
   | ({ type: 'agent_reasoning_raw_content_delta' } & AgentReasoningRawContentDeltaData)
-  | ({ type: 'exec_command_begin' } & ExecCommandBeginData) //已处理
-  | ({ type: 'exec_command_output_delta' } & ExecCommandOutputDeltaData) //已处理
-  | ({ type: 'exec_command_end' } & ExecCommandEndData) //已处理
-  | ({ type: 'exec_approval_request' } & ExecApprovalRequestData) //已处理
-  | ({ type: 'apply_patch_approval_request' } & PatchApprovalData) //已处理
-  | ({ type: 'patch_apply_begin' } & PatchApplyBeginData) //已处理
-  | ({ type: 'patch_apply_end' } & PatchApplyEndData) //已处理
-  | ({ type: 'mcp_tool_call_begin' } & McpToolCallBeginData) //已处理
-  | ({ type: 'mcp_tool_call_end' } & McpToolCallEndData) //已处理
-  | ({ type: 'web_search_begin' } & WebSearchBeginData) //已处理
-  | ({ type: 'web_search_end' } & WebSearchEndData) //已处理
-  | ({ type: 'token_count' } & TokenCountData) //忽略
-  | { type: 'agent_reasoning_section_break' } //已处理
-  | ({ type: 'turn_diff' } & TurnDiffData) // 已处理
+  | ({ type: 'exec_command_begin' } & ExecCommandBeginData)
+  | ({ type: 'exec_command_output_delta' } & ExecCommandOutputDeltaData)
+  | ({ type: 'exec_command_end' } & ExecCommandEndData)
+  | ({ type: 'exec_approval_request' } & ExecApprovalRequestData)
+  | ({ type: 'apply_patch_approval_request' } & PatchApprovalData)
+  | ({ type: 'patch_apply_begin' } & PatchApplyBeginData)
+  | ({ type: 'patch_apply_end' } & PatchApplyEndData)
+  | ({ type: 'mcp_tool_call_begin' } & McpToolCallBeginData)
+  | ({ type: 'mcp_tool_call_end' } & McpToolCallEndData)
+  | ({ type: 'web_search_begin' } & WebSearchBeginData)
+  | ({ type: 'web_search_end' } & WebSearchEndData)
+  | ({ type: 'token_count' } & TokenCountData)
+  | { type: 'agent_reasoning_section_break' }
+  | ({ type: 'turn_diff' } & TurnDiffData)
   | ({ type: 'get_history_entry_response' } & GetHistoryEntryResponseData)
   | ({ type: 'mcp_list_tools_response' } & McpListToolsResponseData)
   | ({ type: 'list_custom_prompts_response' } & ListCustomPromptsResponseData)

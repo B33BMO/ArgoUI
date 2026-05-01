@@ -34,8 +34,8 @@ export function buildClaudeStdioJsonConfig(server: IMcpServer): string {
 }
 
 /**
- * Claude Code MCP代理实现
- * Claude CLI 支持 stdio, sse, http 传输类型
+ * Claude Code MCP
+ * Claude CLI stdio, sse, http
  */
 export class ClaudeMcpAgent extends AbstractMcpAgent {
   constructor() {
@@ -43,33 +43,29 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
   }
 
   getSupportedTransports(): string[] {
-    // Claude CLI 支持 stdio, sse, http 传输类型 (streamable_http maps to http)
+    // Claude CLI stdio, sse, http (streamable_http maps to http)
     return ['stdio', 'sse', 'http', 'streamable_http'];
   }
 
   /**
-   * 检测Claude Code的MCP配置
+   * Claude CodeMCP
    */
   detectMcpServers(_cliPath?: string): Promise<IMcpServer[]> {
     const detectOperation = async () => {
       try {
-        // 使用Claude Code CLI命令获取MCP配置
         const { stdout: result } = await safeExec('claude mcp list', {
           timeout: this.timeout,
           ...getExecEnv(),
         });
 
-        // 如果没有配置任何MCP服务器，返回空数组
         if (result.includes('No MCP servers configured') || !result.trim()) {
           return [];
         }
 
-        // 解析文本输出
         const mcpServers: IMcpServer[] = [];
         const lines = result.split('\n');
 
         for (const line of lines) {
-          // 清除 ANSI 颜色代码 (支持多种格式)
           /* eslint-disable no-control-regex */
           const cleanLine = line
             .replace(/\u001b\[[0-9;]*m/g, '')
@@ -77,8 +73,7 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
             .trim();
           /* eslint-enable no-control-regex */
 
-          // 查找格式如: "12306-mcp: npx -y 12306-mcp - ✓ Connected" 或 "12306-mcp: npx -y 12306-mcp - ✗ Failed to connect"
-          // 支持多种状态文本
+          // : "12306-mcp: npx -y 12306-mcp - ✓ Connected" "12306-mcp: npx -y 12306-mcp - ✗ Failed to connect"
           const match = cleanLine.match(/^([^:]+):\s+(.+?)\s*-\s*[✓✗]\s*(.+)$/);
           if (match) {
             const [, name, commandStr, statusText] = match;
@@ -90,12 +85,12 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
                 ? BUILTIN_IMAGE_GEN_NAME
                 : name.trim();
 
-            // 解析状态：Connected, Disconnected, Failed to connect, 等
+            // Connected, Disconnected, Failed to connect
             const isConnected =
               statusText.toLowerCase().includes('connected') && !statusText.toLowerCase().includes('disconnect');
             const status = isConnected ? 'connected' : 'disconnected';
 
-            // 构建transport对象
+            // transport
             const transportObj = {
               type: 'stdio' as const,
               command: command,
@@ -103,7 +98,7 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
               env: {},
             };
 
-            // 尝试获取tools信息（对所有已连接的服务器）
+            // tools
             let tools: Array<{ name: string; description?: string }> = [];
             if (isConnected) {
               try {
@@ -111,7 +106,7 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
                 tools = testResult.tools || [];
               } catch (error) {
                 console.warn(`[ClaudeMcpAgent] Failed to get tools for ${name.trim()}:`, error);
-                // 如果获取tools失败，继续使用空数组
+                // tools
               }
             }
 
@@ -150,13 +145,12 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
       }
     };
 
-    // 使用命名函数以便在日志中显示
     Object.defineProperty(detectOperation, 'name', { value: 'detectMcpServers' });
     return this.withLock(detectOperation);
   }
 
   /**
-   * 安装MCP服务器到Claude Code agent
+   * MCPClaude Code agent
    */
   installMcpServers(mcpServers: IMcpServer[]): Promise<McpOperationResult> {
     const installOperation = async () => {
@@ -175,20 +169,19 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
               console.log(`[ClaudeMcpAgent] Added MCP server: ${server.name}`);
             } catch (error) {
               console.warn(`Failed to add MCP ${server.name} to Claude Code:`, error);
-              // 继续处理其他服务器，不要因为一个失败就停止
             }
           } else if (
             server.transport.type === 'sse' ||
             server.transport.type === 'http' ||
             server.transport.type === 'streamable_http'
           ) {
-            // 处理 SSE/HTTP/Streamable HTTP 传输类型
-            // Claude CLI 使用 --transport http 处理 HTTP 和 Streamable HTTP
-            // 格式: claude mcp add -s user --transport <type> <name> <url> [--header ...]
+            // SSE/HTTP/Streamable HTTP
+            // Claude CLI --transport http HTTP Streamable HTTP
+            // : claude mcp add -s user --transport <type> <name> <url> [--header ...]
             const transportFlag = server.transport.type === 'streamable_http' ? 'http' : server.transport.type;
             let command = `claude mcp add -s user --transport ${transportFlag} "${server.name}" "${server.transport.url}"`;
 
-            // 添加 headers
+            // headers
             if (server.transport.headers) {
               for (const [key, value] of Object.entries(server.transport.headers)) {
                 command += ` --header "${key}: ${value}"`;
@@ -217,14 +210,13 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
   }
 
   /**
-   * 从Claude Code agent删除MCP服务器
+   * Claude Code agentMCP
    */
   removeMcpServer(mcpServerName: string): Promise<McpOperationResult> {
     const removeOperation = async () => {
       try {
-        // 使用Claude CLI命令删除MCP服务器（尝试不同作用域）
-        // 按顺序尝试: user (AionUi默认) -> local -> project
-        // user scope优先，因为AionUi安装时使用user scope
+        // : user -> local -> project
+        // user scopeAionUiuser scope
         const scopes = ['user', 'local', 'project'] as const;
         const candidateNames = Array.from(
           new Set(
@@ -259,7 +251,6 @@ export class ClaudeMcpAgent extends AbstractMcpAgent {
           }
         }
 
-        // 如果所有作用域都尝试完了，认为删除成功（服务器可能本来就不存在）
         console.log(`[ClaudeMcpAgent] MCP server ${mcpServerName} not found in any scope (may already be removed)`);
         return { success: true };
       } catch (error) {

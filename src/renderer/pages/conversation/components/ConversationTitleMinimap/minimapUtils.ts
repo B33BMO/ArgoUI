@@ -132,23 +132,13 @@ export const renderHighlightedText = (text: string, keyword: string, maxLen = MA
   );
 };
 
-export const toChineseNumeral = (num: number): string => {
-  if (!Number.isFinite(num) || num <= 0) return '';
-  const digits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
-  if (num < 10) return digits[num];
-  if (num < 20) return num === 10 ? '十' : `十${digits[num % 10]}`;
-  if (num < 100) {
-    const tens = Math.floor(num / 10);
-    const ones = num % 10;
-    return `${digits[tens]}十${ones === 0 ? '' : digits[ones]}`;
-  }
-  return String(num);
-};
+// Note: legacy Chinese-numeral search support has been removed for the
+// US-only deployment. Index search now matches Arabic numerals only.
+export const toChineseNumeral = (_num: number): string => '';
 
 export const buildIndexSearchTokens = (index: number) => {
   const arabic = String(index);
-  const chinese = toChineseNumeral(index);
-  return [arabic, `#${arabic}`, `第${arabic}`, chinese, chinese ? `第${chinese}` : ''].filter(Boolean);
+  return [arabic, `#${arabic}`];
 };
 
 export const isIndexMatch = (index: number, keyword: string) => {

@@ -5,8 +5,8 @@
  */
 
 /**
- * ACP Skill Manager - 为 ACP agents (Claude/OpenCode/Codex) 提供 skills 按需加载能力
- * 借鉴 aioncli-core 的 SkillManager 设计
+ * ACP Skill Manager - ACP agents (Claude/OpenCode/Codex) skills
+ * aioncli-core SkillManager
  *
  * ACP Skill Manager - Provides on-demand skill loading for ACP agents (Claude/OpenCode/Codex)
  * Inspired by aioncli-core's SkillManager design
@@ -19,22 +19,22 @@ import { getSkillsDir, getBuiltinSkillsCopyDir, getAutoSkillsDir } from '@proces
 import { ExtensionRegistry } from '@process/extensions';
 
 /**
- * Skill 定义（与 aioncli-core 兼容）
+ * Skill
  * Skill definition (compatible with aioncli-core)
  */
 export interface SkillDefinition {
-  /** 技能唯一名称 / Unique skill name */
+  /*Unique skill name*/
   name: string;
-  /** 技能描述（用于索引）/ Skill description (for indexing) */
+  /** / Skill description (for indexing)*/
   description: string;
-  /** 文件路径 / File path */
+  /*File path*/
   location: string;
-  /** 完整内容（延迟加载）/ Full content (lazy loaded) */
+  /** / Full content (lazy loaded)*/
   body?: string;
 }
 
 /**
- * Skill 索引（轻量级，用于首条消息注入）
+ * Skill
  * Skill index (lightweight, for first message injection)
  */
 export interface SkillIndex {
@@ -43,7 +43,7 @@ export interface SkillIndex {
 }
 
 /**
- * 解析 SKILL.md 的 frontmatter
+ * SKILL.md frontmatter
  * Parse frontmatter from SKILL.md
  */
 function parseFrontmatter(content: string): {
@@ -58,13 +58,13 @@ function parseFrontmatter(content: string): {
   const frontmatter = frontmatterMatch[1];
   const result: { name?: string; description?: string } = {};
 
-  // 解析 name
+  // name
   const nameMatch = frontmatter.match(/^name:\s*['"]?([^'"\n]+)['"]?\s*$/m);
   if (nameMatch) {
     result.name = nameMatch[1].trim();
   }
 
-  // 解析 description（支持单引号、双引号、无引号）
+  // description
   const descMatch = frontmatter.match(/^description:\s*['"]?(.+?)['"]?\s*$/m);
   if (descMatch) {
     result.description = descMatch[1].trim();
@@ -74,7 +74,7 @@ function parseFrontmatter(content: string): {
 }
 
 /**
- * 移除 frontmatter，只保留 body 内容
+ * frontmatter body
  * Remove frontmatter, keep only body content
  */
 function extractBody(content: string): string {
@@ -83,14 +83,13 @@ function extractBody(content: string): string {
 
 /**
  * ACP Skill Manager
- * 为 ACP agents 提供 skills 的索引加载和按需获取能力
+ * ACP agents skills
  *
- * 使用单例模式避免重复文件系统扫描
  * Uses singleton pattern to avoid repeated filesystem scans
  *
- * 支持两类 skills:
- * - 内置 skills (_builtin/): 所有场景自动注入
- * - 可选 skills: 通过 enabledSkills 参数控制
+ * skills:
+ * - skills (_builtin/):
+ * - skills: enabledSkills
  */
 export class AcpSkillManager {
   private static instance: AcpSkillManager | null = null;
@@ -112,32 +111,28 @@ export class AcpSkillManager {
   }
 
   /**
-   * 获取单例实例（带 enabledSkills + excludeBuiltinSkills 缓存键）
    * Get singleton instance (with enabledSkills + excludeBuiltinSkills cache key)
    *
-   * @param enabledSkills - 启用的 skills 列表 / Enabled skills list
-   * @param excludeBuiltinSkills - 排除的内置 skills 列表 / Builtin skills to exclude
-   * @returns AcpSkillManager 实例 / AcpSkillManager instance
+   * Enabled skills list
+   * Builtin skills to exclude
+   * @returns AcpSkillManager / AcpSkillManager instance
    */
   static getInstance(enabledSkills?: string[], excludeBuiltinSkills?: string[]): AcpSkillManager {
     const enabledPart = enabledSkills?.toSorted().join(',') || 'all';
     const excludePart = excludeBuiltinSkills?.toSorted().join(',') || '';
     const cacheKey = excludePart ? `${enabledPart}|exclude:${excludePart}` : enabledPart;
 
-    // 如果缓存键变化，需要重新创建实例
     // If cache key changed, need to recreate instance
     if (AcpSkillManager.instance && AcpSkillManager.instanceKey === cacheKey) {
       return AcpSkillManager.instance;
     }
 
-    // 创建新实例
     AcpSkillManager.instance = new AcpSkillManager();
     AcpSkillManager.instanceKey = cacheKey;
     return AcpSkillManager.instance;
   }
 
   /**
-   * 重置单例实例（用于测试或配置变更）
    * Reset singleton instance (for testing or config changes)
    */
   static resetInstance(): void {
@@ -146,10 +141,10 @@ export class AcpSkillManager {
   }
 
   /**
-   * 初始化：发现并加载内置 skills 的索引（所有场景自动注入）
+   * skills
    * Initialize: discover and load index of builtin skills (auto-injected for all scenarios)
    *
-   * @param excludeSkills - 排除的内置 skill 名称列表 / Builtin skill names to exclude
+   * Builtin skill names to exclude
    */
   async discoverAutoSkills(excludeSkills?: string[]): Promise<void> {
     if (this.autoInitialized) return;
@@ -185,7 +180,7 @@ export class AcpSkillManager {
             name: name || skillName,
             description: description || `Builtin Skill: ${skillName}`,
             location: skillFile,
-            // body 不在这里加载，按需获取
+            // body
           };
 
           // Also check by resolved name
@@ -209,12 +204,11 @@ export class AcpSkillManager {
   }
 
   /**
-   * 从 ExtensionRegistry 加载扩展贡献的 skills
+   * ExtensionRegistry skills
    * Load extension-contributed skills from ExtensionRegistry
    *
-   * 扩展 skills 通过 aion-extension.json 的 contributes.skills 声明，
-   * 由 SkillResolver 解析后缓存在 ExtensionRegistry 中。
-   * 这里将它们合并到 AcpSkillManager 中，使 agent 能够按需加载。
+   * skills aion-extension.json contributes.skills
+   * AcpSkillManager agent
    */
   private async discoverExtensionSkills(enabledSkills?: string[]): Promise<void> {
     if (this.extensionInitialized) return;
@@ -229,13 +223,13 @@ export class AcpSkillManager {
       }
 
       for (const extSkill of extSkills) {
-        // 如果指定了 enabledSkills，只加载被启用的扩展 skills
+        // enabledSkills skills
         // If enabledSkills is specified, only load enabled extension skills
         if (enabledSkills && enabledSkills.length > 0 && !enabledSkills.includes(extSkill.name)) {
           continue;
         }
 
-        // 避免与内置/可选 skills 冲突 / Avoid conflicts with builtin/optional skills
+        // Avoid conflicts with builtin/optional skills
         if (this.autoSkills.has(extSkill.name) || this.skills.has(extSkill.name)) {
           console.warn(`[AcpSkillManager] Extension skill "${extSkill.name}" conflicts with existing skill, skipping`);
           continue;
@@ -261,22 +255,22 @@ export class AcpSkillManager {
   }
 
   /**
-   * 初始化：发现并加载所有 skills 的索引（不加载 body）
+   * skills
    * Initialize: discover and load index of all skills (without body)
    *
-   * @param enabledSkills - 启用的可选 skills 列表 / Enabled optional skills list
-   * @param excludeBuiltinSkills - 排除的内置自动注入 skills / Builtin auto-injected skills to exclude
+   * Enabled optional skills list
+   * Builtin auto-injected skills to exclude
    */
   async discoverSkills(enabledSkills?: string[], excludeBuiltinSkills?: string[]): Promise<void> {
-    // 始终先加载内置 skills / Always load builtin skills first
+    // Always load builtin skills first
     await this.discoverAutoSkills(excludeBuiltinSkills);
 
-    // 加载扩展贡献的 skills / Load extension-contributed skills
+    // Load extension-contributed skills
     await this.discoverExtensionSkills(enabledSkills);
 
     if (this.initialized) return;
 
-    // 未指定 enabledSkills 时不加载任何可选 skills（非 preset agent 场景）
+    // enabledSkills skills
     // Skip all optional skills when enabledSkills is not specified (non-preset agent)
     if (!enabledSkills || enabledSkills.length === 0) {
       this.initialized = true;
@@ -333,8 +327,8 @@ export class AcpSkillManager {
   }
 
   /**
-   * 获取所有 skills 的索引（轻量级）
-   * 包含内置 skills + 可选 skills
+   * skills
+   * skills + skills
    * Get index of all skills (lightweight)
    * Includes builtin skills + optional skills
    */
@@ -343,7 +337,7 @@ export class AcpSkillManager {
     // User-selected skills come first because they represent the most specific intent for this assistant.
     const allSkills: SkillIndex[] = [];
 
-    // 可选 skills 优先（为此助手显式配置，最高优先级）
+    // skills
     // Optional skills first (explicitly configured for this assistant — highest priority)
     for (const skill of this.skills.values()) {
       allSkills.push({
@@ -352,7 +346,7 @@ export class AcpSkillManager {
       });
     }
 
-    // 然后是内置 skills / Then builtin skills
+    // Then builtin skills
     for (const skill of this.autoSkills.values()) {
       allSkills.push({
         name: skill.name,
@@ -360,7 +354,7 @@ export class AcpSkillManager {
       });
     }
 
-    // 最后是扩展 skills / Then extension skills
+    // Then extension skills
     for (const skill of this.extensionSkills.values()) {
       allSkills.push({
         name: skill.name,
@@ -372,7 +366,7 @@ export class AcpSkillManager {
   }
 
   /**
-   * 获取内置 skills 的索引
+   * skills
    * Get index of builtin skills only
    */
   getBuiltinSkillsIndex(): SkillIndex[] {
@@ -383,7 +377,7 @@ export class AcpSkillManager {
   }
 
   /**
-   * 检查是否有任何 skills（内置或可选）
+   * skills
    * Check if there are any skills (builtin or optional)
    */
   hasAnySkills(): boolean {
@@ -391,26 +385,25 @@ export class AcpSkillManager {
   }
 
   /**
-   * 按名称获取单个 skill 的完整内容（按需加载）
-   * 优先级：可选（用户配置）> 内置 > 扩展
+   * skill
    * Get full content of a skill by name (on-demand loading)
    * Priority: optional (user-configured) > builtin > extension
    */
   async getSkill(name: string): Promise<SkillDefinition | null> {
-    // 优先查找可选 skills（用户为此助手显式配置）
+    // skills
     // Check optional skills first (explicitly configured for this assistant)
     let skill = this.skills.get(name);
-    // 再查找内置 skills / Then search builtin skills
+    // Then search builtin skills
     if (!skill) {
       skill = this.autoSkills.get(name);
     }
-    // 最后查找扩展 skills / Then search extension skills
+    // Then search extension skills
     if (!skill) {
       skill = this.extensionSkills.get(name);
     }
     if (!skill) return null;
 
-    // 如果 body 还没加载，现在加载
+    // body
     if (skill.body === undefined) {
       try {
         const content = await fs.readFile(skill.location, 'utf-8');
@@ -425,7 +418,7 @@ export class AcpSkillManager {
   }
 
   /**
-   * 获取多个 skills 的完整内容
+   * skills
    * Get full content of multiple skills
    */
   async getSkills(names: string[]): Promise<SkillDefinition[]> {
@@ -440,7 +433,7 @@ export class AcpSkillManager {
   }
 
   /**
-   * 检查 skill 是否存在（包括内置和可选）
+   * skill
    * Check if a skill exists (including builtin and optional)
    */
   hasSkill(name: string): boolean {
@@ -448,7 +441,7 @@ export class AcpSkillManager {
   }
 
   /**
-   * 清除缓存的 body 内容（用于刷新）
+   * body
    * Clear cached body content (for refresh)
    */
   clearCache(): void {
@@ -465,7 +458,7 @@ export class AcpSkillManager {
 }
 
 /**
- * 构建 skills 索引文本（用于首条消息注入）
+ * skills
  * Build skills index text (for first message injection)
  */
 export function buildSkillsIndexText(skills: SkillIndex[]): string {
@@ -481,7 +474,7 @@ ${lines.join('\n')}`;
 }
 
 /**
- * 检测消息中是否请求加载 skill
+ * skill
  * Detect if message requests loading a skill
  */
 export function detectSkillLoadRequest(content: string): string[] {
@@ -494,7 +487,7 @@ export function detectSkillLoadRequest(content: string): string[] {
 }
 
 /**
- * 构建 skill 内容文本（用于注入）
+ * skill
  * Build skill content text (for injection)
  */
 export function buildSkillContentText(skills: SkillDefinition[]): string {

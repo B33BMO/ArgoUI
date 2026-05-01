@@ -208,10 +208,7 @@ const AcpSendBox: React.FC<{
         emitter.emit('chat.history.refresh');
       } catch (error: unknown) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        const isAuthError =
-          errorMsg.includes('[ACP-AUTH-') ||
-          errorMsg.includes('authentication failed') ||
-          errorMsg.includes('认证失败');
+        const isAuthError = errorMsg.includes('[ACP-AUTH-') || errorMsg.includes('authentication failed');
         if (isAuthError) {
           const errorMessage = {
             id: uuid(),

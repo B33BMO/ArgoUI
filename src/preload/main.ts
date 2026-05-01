@@ -8,7 +8,7 @@ import { contextBridge, ipcRenderer, webUtils } from 'electron';
 import { ADAPTER_BRIDGE_EVENT_KEY } from '../common/adapter/constant';
 
 /**
- * @description 注入到renderer进程中, 用于与main进程通信
+ * @description renderer, main
  * */
 contextBridge.exposeInMainWorld('electronAPI', {
   emit: (name: string, data: any) => {
@@ -34,15 +34,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.off(ADAPTER_BRIDGE_EVENT_KEY, handler);
     };
   },
-  // 获取拖拽文件/目录的绝对路径 / Get absolute path for dragged file/directory
+  // Get absolute path for dragged file/directory
   getPathForFile: (file: File) => webUtils.getPathForFile(file),
-  // 直接 IPC 调用（绕过 bridge 库）/ Direct IPC calls (bypass bridge library)
+  // IPC / Direct IPC calls (bypass bridge library)
   webuiResetPassword: () => ipcRenderer.invoke('webui-direct-reset-password'),
   webuiGetStatus: () => ipcRenderer.invoke('webui-direct-get-status'),
-  // 修改密码不需要当前密码 / Change password without current password
+  // Change password without current password
   webuiChangePassword: (newPassword: string) => ipcRenderer.invoke('webui-direct-change-password', { newPassword }),
   webuiChangeUsername: (newUsername: string) => ipcRenderer.invoke('webui-direct-change-username', { newUsername }),
-  // 生��二维码 token / Generate QR token
+  // Generate QR token
   webuiGenerateQRToken: () => ipcRenderer.invoke('webui-direct-generate-qr-token'),
   // WeChat login IPC
   weixinLoginStart: () => ipcRenderer.invoke('weixin:login:start'),
@@ -63,7 +63,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
 });
 
-// 托盘事件监听 - 将 IPC 事件转换为 DOM 事件
 // Tray event listeners - convert IPC events to DOM events
 const trayEvents = [
   'tray:navigate-to-guid',

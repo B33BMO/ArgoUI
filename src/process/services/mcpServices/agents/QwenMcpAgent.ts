@@ -19,8 +19,7 @@ const getExecEnv = () => ({
 });
 
 /**
- * Qwen Code MCP代理实现
- * Qwen CLI 支持 stdio, sse, http 传输类型
+ * Qwen CLI stdio, sse, http
  */
 export class QwenMcpAgent extends AbstractMcpAgent {
   constructor() {
@@ -32,29 +31,25 @@ export class QwenMcpAgent extends AbstractMcpAgent {
   }
 
   /**
-   * 检测Qwen Code的MCP配置
+   * Qwen CodeMCP
    */
   detectMcpServers(_cliPath?: string): Promise<IMcpServer[]> {
     const detectOperation = async () => {
       try {
-        // 尝试通过Qwen CLI命令获取MCP配置
         const { stdout: result } = await safeExec('qwen mcp list', { timeout: this.timeout, ...getExecEnv() });
 
-        // 如果没有配置任何MCP服务器，返回空数组
         if (result.trim() === 'No MCP servers configured.' || !result.trim()) {
           console.log('[QwenMcpAgent] No MCP servers configured');
           return [];
         }
 
-        // 解析文本输出
         const mcpServers: IMcpServer[] = [];
         const lines = result.split('\n');
 
         for (const line of lines) {
-          // 清除 ANSI 颜色代码
           // eslint-disable-next-line no-control-regex
           const cleanLine = line.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, '').trim();
-          // 查找格式如: "✓ filesystem: npx @modelcontextprotocol/server-filesystem /path (stdio) - Connected"
+          // : "✓ filesystem: npx @modelcontextprotocol/server-filesystem /path (stdio) - Connected"
           const match = cleanLine.match(/[✓✗]\s+([^:]+):\s+(.+?)\s+\(([^)]+)\)\s*-\s*(Connected|Disconnected)/);
           if (match) {
             const [, name, commandStr, transport, status] = match;
@@ -64,7 +59,7 @@ export class QwenMcpAgent extends AbstractMcpAgent {
 
             const transportType = transport as 'stdio' | 'sse' | 'http';
 
-            // 构建transport对象
+            // transport
             const transportObj: any =
               transportType === 'stdio'
                 ? {
@@ -83,7 +78,7 @@ export class QwenMcpAgent extends AbstractMcpAgent {
                       url: commandStr.trim(),
                     };
 
-            // 尝试获取tools信息（对所有已连接的服务器）
+            // tools
             let tools: Array<{ name: string; description?: string }> = [];
             if (status === 'Connected') {
               try {
@@ -91,7 +86,7 @@ export class QwenMcpAgent extends AbstractMcpAgent {
                 tools = testResult.tools || [];
               } catch (error) {
                 console.warn(`[QwenMcpAgent] Failed to get tools for ${name.trim()}:`, error);
-                // 如果获取tools失败，继续使用空数组
+                // tools
               }
             }
 
@@ -137,21 +132,20 @@ export class QwenMcpAgent extends AbstractMcpAgent {
       }
     };
 
-    // 使用命名函数以便在日志中显示
     Object.defineProperty(detectOperation, 'name', { value: 'detectMcpServers' });
     return this.withLock(detectOperation);
   }
 
   /**
-   * 安装MCP服务器到Qwen Code agent
+   * MCPQwen Code agent
    */
   installMcpServers(mcpServers: IMcpServer[]): Promise<McpOperationResult> {
     const installOperation = async () => {
       try {
         for (const server of mcpServers) {
           if (server.transport.type === 'stdio') {
-            // 使用Qwen CLI添加MCP服务器
-            // 格式: qwen mcp add <name> <command> [args...]
+            // Qwen CLIMCP
+            // : qwen mcp add <name> <command> [args...]
             let command = `qwen mcp add "${server.name}" "${server.transport.command}"`;
             if (server.transport.args?.length) {
               // Quote each arg to protect URLs and special characters from shell interpretation
@@ -165,7 +159,7 @@ export class QwenMcpAgent extends AbstractMcpAgent {
               command += ` ${envArgs}`;
             }
 
-            // 添加作用域参数，优先使用user作用域
+            // user
             command += ' -s user';
 
             try {
@@ -178,13 +172,13 @@ export class QwenMcpAgent extends AbstractMcpAgent {
             server.transport.type === 'http' ||
             server.transport.type === 'streamable_http'
           ) {
-            // 处理 SSE/HTTP/Streamable HTTP 传输类型
-            // Qwen CLI 使用 --transport http 处理 HTTP 和 Streamable HTTP
+            // SSE/HTTP/Streamable HTTP
+            // Qwen CLI --transport http HTTP Streamable HTTP
             const transportFlag = server.transport.type === 'streamable_http' ? 'http' : server.transport.type;
             let command = `qwen mcp add "${server.name}" "${server.transport.url}"`;
             command += ` --transport ${transportFlag}`;
 
-            // 添加 headers
+            // headers
             if (server.transport.headers) {
               for (const [key, value] of Object.entries(server.transport.headers)) {
                 command += ` --header "${key}: ${value}"`;
@@ -211,49 +205,43 @@ export class QwenMcpAgent extends AbstractMcpAgent {
   }
 
   /**
-   * 从Qwen Code agent删除MCP服务器
+   * Qwen Code agentMCP
    */
   removeMcpServer(mcpServerName: string): Promise<McpOperationResult> {
     const removeOperation = async () => {
       try {
-        // 使用Qwen CLI命令删除MCP服务器（尝试不同作用域）
-        // 首先尝试user作用域（与安装时保持一致），然后尝试project作用域
+        // userproject
         try {
           const removeCommand = `qwen mcp remove "${mcpServerName}" -s user`;
           const result = await safeExec(removeCommand, { timeout: 5000, ...getExecEnv() });
 
-          // 检查输出是否表示真正的成功删除
           if (result.stdout && result.stdout.includes('removed from user settings')) {
             return { success: true };
           } else if (result.stdout && result.stdout.includes('not found in user')) {
-            // 服务器不在user作用域中，尝试project作用域
+            // userproject
             throw new Error('Server not found in user settings');
           } else {
-            // 其他情况认为成功（向后兼容）
             return { success: true };
           }
         } catch (userError) {
-          // user作用域失败，尝试project作用域
+          // userproject
           try {
             const removeCommand = `qwen mcp remove "${mcpServerName}" -s project`;
             const result = await safeExec(removeCommand, { timeout: 5000, ...getExecEnv() });
 
-            // 检查输出是否表示真正的成功删除
             if (result.stdout && result.stdout.includes('removed from project settings')) {
               return { success: true };
             } else if (result.stdout && result.stdout.includes('not found in project')) {
-              // 服务器不在project作用域中，尝试配置文件
+              // project
               throw new Error('Server not found in project settings', { cause: userError });
             } else {
-              // 其他情况认为成功（向后兼容）
               return { success: true };
             }
           } catch (projectError) {
-            // CLI命令都失败，尝试直接操作配置文件作为后备
             const configPath = join(homedir(), '.qwen', 'client_config.json');
 
             if (!existsSync(configPath)) {
-              return { success: true }; // 配置文件不存在，认为已经删除
+              return { success: true };
             }
 
             try {
@@ -265,7 +253,7 @@ export class QwenMcpAgent extends AbstractMcpAgent {
               return { success: true };
             } catch (fileError) {
               console.warn(`Failed to update config file ${configPath}:`, fileError);
-              return { success: true }; // 如果配置文件操作失败，也认为成功
+              return { success: true };
             }
           }
         }

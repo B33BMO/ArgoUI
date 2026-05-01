@@ -3,10 +3,10 @@
  * Copyright 2025 AionUi (aionui.com)
  * SPDX-License-Identifier: Apache-2.0
  *
- * 统一的 Agent Logo 映射工具
+ * Agent Logo
  * Unified Agent Logo mapping utility
  *
- * 所有需要显示 agent 图标的地方都应该使用这个工具，而不是各自维护列表
+ * agent
  * All places that need to display agent icons should use this utility instead of maintaining separate lists
  */
 
@@ -32,10 +32,9 @@ import QoderLogo from '@/renderer/assets/logos/tools/coding/qoder.png';
 import QwenLogo from '@/renderer/assets/logos/ai-china/qwen.svg';
 
 /**
- * Agent Logo 映射表
+ * Agent Logo
  * Agent Logo mapping table
  *
- * 注意：key 使用小写，支持多种变体（如 openclaw-gateway 和 openclaw）
  * Note: keys are lowercase, supports multiple variants (e.g., openclaw-gateway and openclaw)
  */
 const AGENT_LOGO_MAP = {
@@ -74,11 +73,11 @@ function isDarkTheme(): boolean {
 }
 
 /**
- * 根据 agent 名称获取对应的 logo
+ * agent logo
  * Get agent logo by agent name
  *
- * @param agent - Agent 名称（不区分大小写）/ Agent name (case-insensitive)
- * @returns Logo 路径，如果不存在则返回 null / Logo path, or null if not found
+ * @param agent - Agent / Agent name (case-insensitive)
+ * Logo path, or null if not found
  */
 export function getAgentLogo(agent: string | undefined | null): string | null {
   if (!agent) return null;
@@ -117,11 +116,11 @@ export function resolveAgentLogo(opts: {
 }
 
 /**
- * 检查 agent 是否有对应的 logo
+ * agent logo
  * Check if agent has a corresponding logo
  *
- * @param agent - Agent 名称（不区分大小写）/ Agent name (case-insensitive)
- * @returns 是否存在对应的 logo / Whether the agent has a corresponding logo
+ * @param agent - Agent / Agent name (case-insensitive)
+ * Whether the agent has a corresponding logo
  */
 export function hasAgentLogo(agent: string | undefined | null): boolean {
   return getAgentLogo(agent) !== null;
@@ -129,7 +128,6 @@ export function hasAgentLogo(agent: string | undefined | null): boolean {
 
 /**
  * Check if a model value/label indicates it's a default/recommended model
- * 检查模型值/标签是否表示默认/推荐模型
  *
  * @param value - Model value
  * @param label - Model label
@@ -142,7 +140,6 @@ export const isDefaultModel = (value?: string | null, label?: string | null): bo
 
 /**
  * Get display label for a model, with fallback handling
- * 获取模型的显示标签，带回退处理
  *
  * @param selectedValue - Selected model value
  * @param selectedLabel - Selected model label

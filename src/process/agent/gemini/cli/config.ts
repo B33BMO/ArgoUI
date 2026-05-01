@@ -74,9 +74,9 @@ export interface LoadCliConfigOptions {
   conversationToolConfig: ConversationToolConfig;
   yoloMode?: boolean;
   mcpServers?: Record<string, unknown>;
-  /** 内置 skills 目录路径 / Builtin skills directory path */
+  /*Builtin skills directory path*/
   skillsDir?: string;
-  /** 启用的 skills 列表，用于过滤加载的 skills / Enabled skills list for filtering loaded skills */
+  /*Enabled skills list for filtering loaded skills*/
   enabledSkills?: string[];
 }
 
@@ -100,9 +100,9 @@ export async function loadCliConfig({
   // Map 'auto' to the correct aioncli-core model alias
   // aioncli-core expects 'auto-gemini-3' or 'auto-gemini-2.5', not plain 'auto'
   // Config internally calls resolveModel(model, getGemini31LaunchedSync()) to resolve to gemini-3.1-pro-preview
-  // 将 'auto' 映射到正确的 aioncli-core 模型别名
-  // aioncli-core 需要 'auto-gemini-3' 或 'auto-gemini-2.5'，而不是纯 'auto'
-  // Config 内部会调用 resolveModel(model, getGemini31LaunchedSync()) 解析为 gemini-3.1-pro-preview
+  // 'auto' aioncli-core
+  // aioncli-core 'auto-gemini-3' 'auto-gemini-2.5' 'auto'
+  // Config resolveModel(model, getGemini31LaunchedSync()) gemini-3.1-pro-preview
   const resolvedModel = model === 'auto' ? PREVIEW_GEMINI_MODEL_AUTO : model;
 
   const debugMode =
@@ -112,9 +112,9 @@ export async function loadCliConfig({
 
   const _ideModeFeature = (argv.ideModeFeature ?? settings.ideModeFeature ?? false) && !process.env.SANDBOX;
 
-  // 加载内置 skills 并创建虚拟 extension
+  // skills extension
   // Load builtin skills and create a virtual extension
-  // 仅在指定 enabledSkills 时加载，非 preset agent 不加载任何可选 skills
+  // enabledSkills preset agent skills
   // Only load when enabledSkills is specified; non-preset agents get no optional skills
   let builtinSkills: SkillDefinition[] = [];
   if (skillsDir && enabledSkills && enabledSkills.length > 0) {
@@ -144,7 +144,7 @@ export async function loadCliConfig({
     }
   }
 
-  // 创建虚拟 extension 来承载内置 skills
+  // extension skills
   // Create a virtual extension to hold builtin skills
   const builtinSkillsExtension: GeminiCLIExtension = {
     name: 'aionui-builtin-skills',
@@ -186,10 +186,10 @@ export async function loadCliConfig({
     ...settings.fileFiltering,
   };
 
-  // 直接使用 aioncli-core 的 loadServerHierarchicalMemory，传入 ExtensionLoader
+  // aioncli-core loadServerHierarchicalMemory ExtensionLoader
   // Directly use aioncli-core's loadServerHierarchicalMemory with ExtensionLoader
   const extensionLoader = new SimpleExtensionLoader(allExtensions);
-  const folderTrust = true; // 默认信任工作区 / Default to trusting the workspace
+  const folderTrust = true; // Default to trusting the workspace
   const { memoryContent, fileCount } = await loadServerHierarchicalMemory(
     workspace,
     [],
@@ -204,7 +204,6 @@ export async function loadCliConfig({
 
   let mcpServersConfig = mergeMcpServers(settings, activeExtensions, mcpServers);
 
-  // 使用对话级别的工具配置
   const toolConfig = conversationToolConfig.getConfig();
 
   const excludeTools = mergeExcludeTools(settings, activeExtensions).concat(toolConfig.excludeTools);
@@ -239,7 +238,7 @@ export async function loadCliConfig({
         Object.entries(mcpServersConfig).filter(([key, server]) => {
           const isAllowed = allowedNames.has(key);
           if (!isAllowed) {
-            // aioncli-core v0.18.4: 使用 server.extension?.name 替代 server.extensionName / use server.extension?.name instead of server.extensionName
+            // aioncli-core v0.18.4: server.extension?.name server.extensionName / use server.extension?.name instead of server.extensionName
             blockedMcpServers.push({
               name: key,
               extensionName: server.extension?.name || '',
@@ -252,7 +251,7 @@ export async function loadCliConfig({
       blockedMcpServers.push(
         ...Object.entries(mcpServersConfig).map(([key, server]) => ({
           name: key,
-          // aioncli-core v0.18.4: 使用 server.extension?.name 替代 server.extensionName / use server.extension?.name instead of server.extensionName
+          // aioncli-core v0.18.4: server.extension?.name server.extensionName / use server.extension?.name instead of server.extensionName
           extensionName: server.extension?.name || '',
         }))
       );
@@ -260,7 +259,6 @@ export async function loadCliConfig({
     }
   }
 
-  // extensionLoader 已在上方创建，复用于 Config 初始化
   // extensionLoader was created above, reuse for Config initialization
 
   const config = new Config({
@@ -271,7 +269,7 @@ export async function loadCliConfig({
     includeDirectories: argv.includeDirectories,
     debugMode,
     question: argv.promptInteractive || argv.prompt || '',
-    // fullContext 参数在 aioncli-core v0.18.4 中已移除 / parameter was removed in aioncli-core v0.18.4
+    // parameter was removed in aioncli-core v0.18.4
     coreTools: settings.coreTools || undefined,
     excludeTools,
     toolDiscoveryCommand: settings.toolDiscoveryCommand,
@@ -281,7 +279,7 @@ export async function loadCliConfig({
     userMemory: memoryContent,
     geminiMdFileCount: fileCount,
     approvalMode: argv.yolo || false ? ApprovalMode.YOLO : ApprovalMode.DEFAULT,
-    // AionUi 是桌面应用，支持用户交互确认，需要设置 interactive: true
+    // AionUi interactive: true
     // AionUi is a desktop app with user interaction support, needs interactive: true
     interactive: true,
     showMemoryUsage: argv.showMemoryUsage || argv.show_memory_usage || settings.showMemoryUsage || false,
@@ -307,7 +305,7 @@ export async function loadCliConfig({
     fileDiscoveryService: fileService,
     bugCommand: settings.bugCommand,
     model: resolvedModel || DEFAULT_GEMINI_MODEL,
-    // 使用 extensionLoader 替代已废弃的 extensionContextFilePaths 和 extensions 参数
+    // extensionLoader extensionContextFilePaths extensions
     // Use extensionLoader instead of deprecated extensionContextFilePaths and extensions parameters
     extensionLoader,
     maxSessionTurns: settings.maxSessionTurns ?? -1,
@@ -319,28 +317,27 @@ export async function loadCliConfig({
     // Skills are symlinked into workspace .gemini/skills/ by setupAssistantWorkspace()
     // Native activate_skill tool handles: body injection + folder structure + directory permission
     skillsSupport: true,
-    // 启用 fetch 错误重试，处理 "exception TypeError: fetch failed sending request" 错误
+    // fetch "exception TypeError: fetch failed sending request"
     // Enable retry on fetch errors to handle "exception TypeError: fetch failed sending request"
-    // 这通常是由网络不稳定或代理问题导致的临时错误
     // This is usually a transient error caused by network instability or proxy issues
     retryFetchErrors: true,
   });
 
-  // FallbackModelHandler 返回类型在 aioncli-core v0.18.4 中使用 FallbackIntent
+  // FallbackModelHandler aioncli-core v0.18.4 FallbackIntent
   // FallbackModelHandler return type uses FallbackIntent in aioncli-core v0.18.4
-  // 可用值 / Available values: 'retry_always' | 'retry_once' | 'stop' | 'retry_later' | 'upgrade' | null
+  // Available values: 'retry_always' | 'retry_once' | 'stop' | 'retry_later' | 'upgrade' | null
   //
-  // 工作流程 / Workflow:
-  // 1. handler 调用 apiKeyManager.rotateKey() 更新 process.env 中的 API Key
+  // Workflow:
+  // 1. handler apiKeyManager.rotateKey() process.env API Key
   //    handler calls apiKeyManager.rotateKey() to update API Key in process.env
-  // 2. aioncli-core 的 tryRotateApiKey 检测到 env 变化后会调用 config.refreshAuth()
+  // 2. aioncli-core tryRotateApiKey env config.refreshAuth()
   //    aioncli-core's tryRotateApiKey detects env change and calls config.refreshAuth()
-  // 3. 返回 'retry_once' 表示本次重试，'stop' 表示停止
+  // 3. 'retry_once' 'stop'
   //    Return 'retry_once' for one-time retry, 'stop' to stop retrying
   //
-  // 重要：返回 'retry_once' 会导致 aioncli-core 重置重试计数并继续重试
+  // 'retry_once' aioncli-core
   // IMPORTANT: returning 'retry_once' causes aioncli-core to reset retry count and continue
-  // 对于 RATE_LIMIT 错误，如果没有其他 API key 可用，应该返回 null 让内置重试机制处理
+  // RATE_LIMIT API key null
   // For RATE_LIMIT errors, if no other API keys available, return null to let built-in retry handle it
   const fallbackModelHandler = async (
     _currentModel: string,
@@ -352,30 +349,28 @@ export async function loadCliConfig({
       const apiKeyManager = agent?.getApiKeyManager();
 
       if (!apiKeyManager?.hasMultipleKeys()) {
-        // 单 Key 模式，返回 'stop' 停止重试
-        // 避免返回 'retry_once' 导致无限重试循环
+        // Key 'stop'
         // Single key mode, return 'stop' to stop retrying
         // Avoid returning 'retry_once' which causes infinite retry loop
         console.log('[FallbackHandler] Single key mode, stopping retry');
         return 'stop';
       }
 
-      // 轮换到下一个可用的 API Key，这会更新 process.env
+      // API Key process.env
       // Rotate to next available API Key, this updates process.env
       const hasMoreKeys = apiKeyManager.rotateKey();
 
       if (hasMoreKeys) {
-        // 还有可用的 Key，重试一次
         // More keys available, retry once
         return 'retry_once';
       }
 
-      // 所有 Key 都已用尽或被 blacklist，停止重试
+      // Key blacklist
       // All keys exhausted or blacklisted, stop retrying
       return 'stop';
     } catch (e) {
       console.error(`[FallbackHandler] Handler error:`, e);
-      // 发生错误时返回 'stop'，停止重试
+      // 'stop'
       // On error, return 'stop' to stop retrying
       return 'stop';
     }
@@ -389,7 +384,7 @@ export async function loadCliConfig({
 function mergeMcpServers(settings: Settings, extensions: GeminiCLIExtension[], uiMcpServers?: Record<string, unknown>) {
   const mcpServers = { ...settings.mcpServers };
 
-  // 添加来自 extensions 的 MCP 服务器
+  // extensions MCP
   // Add MCP servers from extensions
   for (const extension of extensions) {
     Object.entries(extension.mcpServers || {}).forEach(([key, server]) => {
@@ -404,7 +399,6 @@ function mergeMcpServers(settings: Settings, extensions: GeminiCLIExtension[], u
     });
   }
 
-  // 添加来自 UI 配置的 MCP 服务器（优先级最高）
   if (uiMcpServers) {
     Object.entries(uiMcpServers).forEach(([key, server]) => {
       if (mcpServers[key]) {

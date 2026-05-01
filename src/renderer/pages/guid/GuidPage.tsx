@@ -161,7 +161,7 @@ const GuidPage: React.FC = () => {
     (value: string) => {
       guidInput.setInput(value);
       const match = value.match(mention.mentionMatchRegex);
-      // 首页不根据输入 @ 呼起 mention 列表，占位符里的 @agent 仅为提示，选 agent 用顶部栏或下拉手动选
+      // @ mention @agent agent
       if (match) {
         mention.setMentionQuery(match[1]);
         mention.setMentionOpen(false);

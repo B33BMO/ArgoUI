@@ -165,7 +165,6 @@ export class AcpConnection {
     await this.setupChildProcessHandlers(backend);
   }
 
-  // 通用的后端连接方法
   private async connectGenericBackend(
     backend: Exclude<AcpBackend, 'claude' | 'codebuddy' | 'codex'>,
     cliPath: string,
@@ -507,7 +506,6 @@ export class AcpConnection {
     );
   }
 
-  // 暂停指定请求的超时计时器
   private pauseRequestTimeout(requestId: number): void {
     const request = this.pendingRequests.get(requestId);
     if (request && !request.isPaused && request.timeoutId) {
@@ -517,7 +515,6 @@ export class AcpConnection {
     }
   }
 
-  // 恢复指定请求的超时计时器
   // Reset startTime so the full timeout budget restarts after a permission pause.
   // Without this, long permission waits cause immediate timeout on resume.
   private resumeRequestTimeout(requestId: number): void {
@@ -533,7 +530,7 @@ export class AcpConnection {
     }
   }
 
-  // 暂停所有 session/prompt 请求的超时
+  // session/prompt
   private pauseSessionPromptTimeouts(): void {
     let _pausedCount = 0;
     for (const [id, request] of this.pendingRequests) {
@@ -544,7 +541,7 @@ export class AcpConnection {
     }
   }
 
-  // 恢复所有 session/prompt 请求的超时
+  // session/prompt
   private resumeSessionPromptTimeouts(): void {
     let _resumedCount = 0;
     for (const [id, request] of this.pendingRequests) {
@@ -555,7 +552,7 @@ export class AcpConnection {
     }
   }
 
-  // 重置所有 session/prompt 请求的超时计时器（在收到流式更新时调用）
+  // session/prompt
   // Reset timeout timers for all session/prompt requests (called when receiving streaming updates)
   private resetSessionPromptTimeouts(): void {
     for (const [id, request] of this.pendingRequests) {
@@ -587,9 +584,9 @@ export class AcpConnection {
 
   private handleMessage(message: AcpMessage): void {
     try {
-      // 优先检查是否为 request/notification（有 method 字段）
+      // request/notification
       if ('method' in message) {
-        // 直接传递给 handleIncomingRequest，switch 会过滤未知 method
+        // handleIncomingRequestswitch method
         this.handleIncomingRequest(message as AcpIncomingMessage).catch((_error) => {
           // Handle request errors silently
         });
@@ -630,7 +627,7 @@ export class AcpConnection {
     try {
       let result = null;
 
-      // 可辨识联合类型：TypeScript 根据 method 字面量自动窄化 params 类型
+      // TypeScript method params
       switch (message.method) {
         case ACP_METHODS.SESSION_UPDATE:
           // Track first chunk latency since prompt was sent
@@ -690,12 +687,12 @@ export class AcpConnection {
   private async handlePermissionRequest(params: AcpPermissionRequest): Promise<{
     outcome: { outcome: string; optionId: string };
   }> {
-    // 暂停所有 session/prompt 请求的超时计时器
+    // session/prompt
     this.pauseSessionPromptTimeouts();
     try {
       const response = await this.onPermissionRequest(params);
 
-      // 根据用户的选择决定outcome
+      // outcome
       const optionId = response.optionId;
       const outcome = optionId.includes('reject') ? 'rejected' : 'selected';
 
@@ -706,23 +703,21 @@ export class AcpConnection {
         },
       };
     } catch (error) {
-      // 处理超时或其他错误情况，默认拒绝
       console.error('Permission request failed:', error);
       return {
         outcome: {
           outcome: 'rejected',
-          optionId: 'reject_once', // 默认拒绝
+          optionId: 'reject_once',
         },
       };
     } finally {
-      // 无论成功还是失败，都恢复 session/prompt 请求的超时计时器
+      // session/prompt
       this.resumeSessionPromptTimeouts();
     }
   }
 
   private resolveWorkspacePath(targetPath: string): string {
     // Absolute paths are used as-is; relative paths are anchored to the conversation workspace
-    // 绝对路径保持不变， 相对路径锚定到当前会话的工作区
     if (!targetPath) return this.workingDir;
     if (path.isAbsolute(targetPath)) {
       return targetPath;
@@ -761,14 +756,13 @@ export class AcpConnection {
 
   /**
    * Create a new session or resume an existing one.
-   * 创建新会话或恢复现有会话。
    *
    * @param cwd - Working directory for the session
    * @param options - Optional resume parameters
    * @param options.resumeSessionId - Session ID to resume (if supported by backend)
    * @param options.forkSession - When true, creates a new session ID while preserving conversation context.
    *                              When false (default), reuses the original session ID.
-   *                              为 true 时创建新 session ID 但保留对话上下文；为 false（默认）时复用原 session ID。
+   * true session ID false session ID
    */
   async newSession(
     cwd: string = process.cwd(),
@@ -907,7 +901,6 @@ export class AcpConnection {
 
   /**
    * Ensure the cwd we send to ACP agents is relative to the actual working directory.
-   * 某些 CLI 会对绝对路径进行再次拼接，导致“套娃”路径，因此需要转换为相对路径。
    */
   private normalizeCwdForAgent(cwd?: string): string {
     const defaultPath = '.';
@@ -1116,7 +1109,7 @@ export class AcpConnection {
 
   /**
    * Get the current session ID (for session resume support).
-   * 获取当前 session ID（用于会话恢复支持）。
+   * session ID
    */
   get currentSessionId(): string | null {
     return this.sessionId;
@@ -1136,7 +1129,6 @@ export class AcpConnection {
   }
 
   // Normalize read operations to the conversation workspace before touching the filesystem
-  // 访问文件前先把读取操作映射到会话工作区
   private async handleReadOperation(params: { path: string; sessionId?: string }): Promise<{ content: string }> {
     const resolvedReadPath = this.resolveWorkspacePath(params.path);
     this.onFileOperation({
@@ -1148,7 +1140,6 @@ export class AcpConnection {
   }
 
   // Normalize write operations and emit UI events so the workspace view stays in sync
-  // 将写入操作归一化并通知 UI，保持工作区视图同步
   private async handleWriteOperation(params: { path: string; content: string; sessionId?: string }): Promise<null> {
     const resolvedWritePath = this.resolveWorkspacePath(params.path);
     this.onFileOperation({

@@ -16,12 +16,10 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import { getEnhancedEnv, normalizeNpxArgsForBundledBun, resolveNpxPath } from '@/process/utils/shellEnv';
 
 /**
- * MCP源类型 - 包括所有ACP后端和AionUi内置
  */
 export type McpSource = AcpBackendAll | 'gemini' | 'aionui' | 'aionrs';
 
 /**
- * MCP操作结果接口
  */
 export interface McpOperationResult {
   success: boolean;
@@ -29,19 +27,17 @@ export interface McpOperationResult {
 }
 
 /**
- * MCP连接测试结果接口
  */
 export interface McpConnectionTestResult {
   success: boolean;
   tools?: Array<{ name: string; description?: string; _meta?: Record<string, unknown> }>;
   error?: string;
-  needsAuth?: boolean; // 是否需要 OAuth 认证
-  authMethod?: 'oauth' | 'basic'; // 认证方法
-  wwwAuthenticate?: string; // WWW-Authenticate 头内容
+  needsAuth?: boolean; // OAuth
+  authMethod?: 'oauth' | 'basic';
+  wwwAuthenticate?: string; // WWW-Authenticate
 }
 
 /**
- * MCP检测结果接口
  */
 export interface DetectedMcpServer {
   source: McpSource;
@@ -49,7 +45,6 @@ export interface DetectedMcpServer {
 }
 
 /**
- * MCP同步结果接口
  */
 export interface McpSyncResult {
   success: boolean;
@@ -61,52 +56,47 @@ export interface McpSyncResult {
 }
 
 /**
- * MCP协议接口 - 定义MCP操作的标准协议
  */
 export interface IMcpProtocol {
   /**
-   * 检测MCP配置
-   * @param cliPath 可选的CLI路径
-   * @returns MCP服务器列表
+   * @param cliPath CLI
+   * @returns MCP
    */
   detectMcpServers(cliPath?: string): Promise<IMcpServer[]>;
 
   /**
-   * 安装MCP服务器到agent
-   * @param mcpServers 要安装的MCP服务器列表
-   * @returns 操作结果
+   * MCPagent
+   * @param mcpServers MCP
+   * @returns
    */
   installMcpServers(mcpServers: IMcpServer[]): Promise<McpOperationResult>;
 
   /**
-   * 从agent删除MCP服务器
-   * @param mcpServerName 要删除的MCP服务器名称
-   * @returns 操作结果
+   * agentMCP
+   * @param mcpServerName MCP
+   * @returns
    */
   removeMcpServer(mcpServerName: string): Promise<McpOperationResult>;
 
   /**
-   * 测试MCP服务器连接
-   * @param server MCP服务器配置
-   * @returns 连接测试结果
+   * @param server MCP
+   * @returns
    */
   testMcpConnection(server: IMcpServer): Promise<McpConnectionTestResult>;
 
   /**
-   * 获取支持的传输类型
-   * @returns 支持的传输类型列表
+   * @returns
    */
   getSupportedTransports(): string[];
 
   /**
-   * 获取agent后端类型
-   * @returns agent后端类型
+   * agent
+   * @returns agent
    */
   getBackendType(): McpSource;
 }
 
 /**
- * MCP协议抽象基类
  */
 export abstract class AbstractMcpAgent implements IMcpProtocol {
   protected readonly backend: McpSource;
@@ -119,22 +109,18 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
   }
 
   /**
-   * 确保操作串行执行的互斥锁
    */
   protected withLock<T>(operation: () => Promise<T>): Promise<T> {
     const currentQueue = this.operationQueue;
     const operationName = operation.name || 'anonymous operation';
 
-    // 创建一个新的 Promise，它会等待前一个操作完成
     const newOperation = currentQueue
       .then(() => operation())
       .catch((error) => {
         console.warn(`[${this.backend} MCP] ${operationName} failed:`, error);
-        // 即使操作失败，也要继续执行队列中的下一个操作
         throw error;
       });
 
-    // 更新队列（忽略错误，确保队列继续）
     this.operationQueue = newOperation.catch(() => {
       // Empty catch to prevent unhandled rejection
     });
@@ -155,8 +141,7 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
   }
 
   /**
-   * 测试MCP服务器连接的通用实现
-   * @param serverOrTransport 完整的服务器配置或仅传输配置
+   * @param serverOrTransport
    */
   testMcpConnection(serverOrTransport: IMcpServer | IMcpServer['transport']): Promise<McpConnectionTestResult> {
     try {
@@ -181,8 +166,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
   }
 
   /**
-   * 测试Stdio连接的通用实现
-   * 使用 MCP SDK 进行正确的协议通信
    */
   protected async testStdioConnection(
     transport: {
@@ -221,7 +204,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         stderr: 'pipe',
       });
 
-      // 创建 MCP 客户端
       mcpClient = new Client(
         {
           name: getPlatformServices().paths.getName(),
@@ -234,7 +216,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         }
       );
 
-      // 连接到服务器并获取工具列表
       await mcpClient.connect(stdioTransport);
       const result = await mcpClient.listTools();
 
@@ -248,7 +229,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
       const errorCode = (error as NodeJS.ErrnoException)?.code;
 
       // Detect missing command (npx/node not installed)
-      // 检测命令不存在（npx/node 未安装）
       if (
         errorCode === 'ENOENT' ||
         errorMessage.includes('ENOENT') ||
@@ -271,7 +251,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
       }
 
       // Detect permission errors
-      // 检测权限错误
       if (errorCode === 'EACCES' || errorMessage.includes('EACCES') || errorMessage.includes('permission denied')) {
         return {
           success: false,
@@ -280,7 +259,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
       }
 
       // Detect timeout errors
-      // 检测超时错误
       if (errorMessage.includes('timeout') || errorMessage.includes('ETIMEDOUT')) {
         return {
           success: false,
@@ -293,7 +271,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         error: errorMessage,
       };
     } finally {
-      // 清理连接
       if (mcpClient) {
         try {
           await mcpClient.close();
@@ -305,8 +282,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
   }
 
   /**
-   * 测试SSE连接的通用实现
-   * 使用 MCP SDK 进行正确的协议通信
    */
   protected async testSseConnection(transport: {
     url: string;
@@ -317,13 +292,11 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
     try {
       // app imported statically
 
-      // 先尝试简单的 HTTP 请求检测认证需求
       const authCheckResponse = await fetch(transport.url, {
         method: 'GET',
         headers: transport.headers || {},
       });
 
-      // 检查是否需要认证
       if (authCheckResponse.status === 401) {
         const wwwAuthenticate = authCheckResponse.headers.get('WWW-Authenticate');
         if (wwwAuthenticate) {
@@ -337,14 +310,12 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         }
       }
 
-      // 创建 SSE 传输层
       const sseTransport = new SSEClientTransport(new URL(transport.url), {
         requestInit: {
           headers: transport.headers,
         },
       });
 
-      // 创建 MCP 客户端
       mcpClient = new Client(
         {
           name: getPlatformServices().paths.getName(),
@@ -357,7 +328,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         }
       );
 
-      // 连接到服务器并获取工具列表
       await mcpClient.connect(sseTransport);
       const result = await mcpClient.listTools();
 
@@ -370,7 +340,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
 
-      // 检查错误消息中是否包含认证相关信息
       if (errorMessage.toLowerCase().includes('401') || errorMessage.toLowerCase().includes('unauthorized')) {
         return {
           success: false,
@@ -384,7 +353,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         error: errorMessage,
       };
     } finally {
-      // 清理连接
       if (mcpClient) {
         try {
           await mcpClient.close();
@@ -396,7 +364,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
   }
 
   /**
-   * 测试HTTP连接的通用实现
    * MCP Streamable HTTP servers may respond with JSON or SSE (text/event-stream).
    * Try raw JSON-RPC first; if the response is SSE, fall back to StreamableHTTPClientTransport.
    */
@@ -466,8 +433,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
   }
 
   /**
-   * 测试Streamable HTTP连接的通用实现
-   * 使用 MCP SDK 进行正确的协议通信
    */
   protected async testStreamableHttpConnection(transport: {
     url: string;
@@ -478,14 +443,13 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
     try {
       // app imported statically
 
-      // 创建 Streamable HTTP 传输层
+      // Streamable HTTP
       const streamableHttpTransport = new StreamableHTTPClientTransport(new URL(transport.url), {
         requestInit: {
           headers: transport.headers,
         },
       });
 
-      // 创建 MCP 客户端
       mcpClient = new Client(
         {
           name: getPlatformServices().paths.getName(),
@@ -498,7 +462,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         }
       );
 
-      // 连接到服务器并获取工具列表
       await mcpClient.connect(streamableHttpTransport);
       const result = await mcpClient.listTools();
 
@@ -513,7 +476,6 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
         error: error instanceof Error ? error.message : String(error),
       };
     } finally {
-      // 清理连接
       if (mcpClient) {
         try {
           await mcpClient.close();

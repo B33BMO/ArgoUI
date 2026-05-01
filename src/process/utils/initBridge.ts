@@ -22,7 +22,6 @@ const channelRepo = new SqliteChannelRepository();
 const teamRepo = new SqliteTeamRepository();
 const teamSessionService = new TeamSessionService(teamRepo, workerTaskManager, conversationServiceImpl);
 
-// 初始化所有IPC桥接
 initAllBridges({
   conversationService: conversationServiceImpl,
   conversationRepo: repo,

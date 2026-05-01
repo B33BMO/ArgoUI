@@ -4,18 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// 复用现有的业务类型定义
 import type { ConversationSource, TChatConversation, IConfigStorageRefer } from '@/common/config/storage';
 import type { TMessage } from '@/common/chat/chatLib';
 
 /**
  * ======================
- * 数据库专属类型 (新增功能)
  * ======================
  */
 
 /**
- * User account (新增的账户系统)
+ * User account
  */
 export interface IUser {
   id: string;
@@ -33,7 +31,6 @@ export interface IUser {
 
 /**
  * ======================
- * 数据库查询辅助类型
  * ======================
  */
 
@@ -59,12 +56,11 @@ export interface IPaginatedResult<T> {
 
 /**
  * ======================
- * 数据库存储格式 (序列化后的格式)
  * ======================
  */
 
 /**
- * Conversation stored in database (序列化后的格式)
+ * Conversation stored in database
  */
 export interface IConversationRow {
   id: string;
@@ -74,19 +70,19 @@ export interface IConversationRow {
   extra: string; // JSON string of extra data
   model?: string; // JSON string of TProviderWithModel (gemini type has this)
   status?: 'pending' | 'running' | 'finished';
-  source?: ConversationSource; // 会话来源 / Conversation source
+  source?: ConversationSource; // Conversation source
   channel_chat_id?: string; // Channel chat isolation ID (e.g. user:xxx or group:xxx)
   created_at: number;
   updated_at: number;
 }
 
 /**
- * Message stored in database (序列化后的格式)
+ * Message stored in database
  */
 export interface IMessageRow {
   id: string;
   conversation_id: string;
-  msg_id?: string; // 消息来源ID
+  msg_id?: string;
   type: string; // TMessage['type']
   content: string; // JSON string of message content
   position?: 'left' | 'right' | 'center' | 'pop';
@@ -96,7 +92,7 @@ export interface IMessageRow {
 }
 
 /**
- * Config stored in database (key-value, 用于数据库版本跟踪)
+ * Config stored in database
  */
 export interface IConfigRow {
   key: string;
@@ -106,7 +102,6 @@ export interface IConfigRow {
 
 /**
  * ======================
- * 类型转换函数
  * ======================
  */
 
@@ -249,12 +244,10 @@ export function rowToMessage(row: IMessageRow): TMessage {
 
 /**
  * ======================
- * 导出类型别名，方便使用
  * ======================
  */
 
 export type {
-  // 复用的业务类型
   TChatConversation,
   TMessage,
   IConfigStorageRefer,

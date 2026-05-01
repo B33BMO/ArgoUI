@@ -1,7 +1,5 @@
 /**
- * ext-飞书 Channel 示例（默认未集成）
- * - 复制飞书 Channels 的核心思路：事件去重、消息收发、基础指标收集
- * - 为了示例可独立阅读，这里不直接依赖飞书 SDK
+ * ext- Channel
  */
 
 const EVENT_TTL_MS = 5 * 60 * 1000;
@@ -55,7 +53,6 @@ class ExtFeishuChannelPlugin {
   }
 
   /**
-   * 模拟接收入站事件（供示例/测试）
    */
   async ingestIncomingEvent(event) {
     const eventId = event && event.eventId ? String(event.eventId) : '';

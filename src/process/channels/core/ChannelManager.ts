@@ -95,9 +95,7 @@ export class ChannelManager {
       this.pluginManager.setMessageHandler(this.actionExecutor.getMessageHandler());
 
       // Set confirm handler for tool confirmations
-      // 设置工具确认处理器
       this.pluginManager.setConfirmHandler(async (userId: string, platform: string, callId: string, value: string) => {
-        // 查找用户
         // Find user
         const db = await getDatabase();
         const userResult = db.getChannelUserByPlatform(userId, platform as PluginType);
@@ -106,7 +104,7 @@ export class ChannelManager {
           return;
         }
 
-        // 查找 session 获取 conversationId
+        // session conversationId
         // Find session to get conversationId
         const session = this.sessionManager?.getSession(userResult.data.id);
         if (!session?.conversationId) {
@@ -114,7 +112,7 @@ export class ChannelManager {
           return;
         }
 
-        // 调用 confirm
+        // confirm
         // Call confirm
         try {
           await getChannelMessageService().confirm(session.conversationId, callId, value);
@@ -533,7 +531,6 @@ export class ChannelManager {
    * Cleanup resources when a conversation is deleted
    * Called when a non-AionUI conversation (e.g., telegram) is deleted
    *
-   * 当会话被删除时清理相关资源（用于 telegram 等非 AionUI 来源的会话）
    *
    * @param conversationId - The ID of the conversation being deleted
    * @returns true if cleanup was performed, false if no resources to clean

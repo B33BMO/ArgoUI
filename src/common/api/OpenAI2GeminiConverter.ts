@@ -155,7 +155,6 @@ export class OpenAI2GeminiConverter implements ProtocolConverter<
     }
 
     // Check if request seems to be for image generation
-    // 检查请求是否为图片生成
     const isImageGeneration = parts.some(
       (part) =>
         part.text &&
@@ -166,7 +165,6 @@ export class OpenAI2GeminiConverter implements ProtocolConverter<
     );
 
     // Use the model passed in params, don't override with hardcoded model
-    // 使用传入的模型，不要硬编码覆盖
     const model = params.model || this.config.defaultModel || 'gemini-1.5-flash';
 
     const request: GeminiRequest = {
@@ -175,7 +173,6 @@ export class OpenAI2GeminiConverter implements ProtocolConverter<
     };
 
     // For image generation, add responseModalities to request image output
-    // 对于图片生成，添加 responseModalities 以请求图片输出
     if (isImageGeneration) {
       request.generationConfig = {
         responseModalities: ['IMAGE', 'TEXT'],

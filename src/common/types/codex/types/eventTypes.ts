@@ -6,10 +6,9 @@
 
 // Codex Agent Event Types
 export enum CodexAgentEventType {
-  // 会话和配置事件 Session and configuration events
+  // Session and configuration events
   /**
-   * 会话配置事件 - 确认客户端的配置消息
-   * prompt: '你好 codex'
+   * prompt: ' codex'
    * payload: {
    *  session_id: string,
    *  model: string,
@@ -23,79 +22,68 @@ export enum CodexAgentEventType {
   SESSION_CONFIGURED = 'session_configured',
 
   /**
-   * 任务开始事件 - 代理已开始任务
-   * prompt: '你好 codex'
+   * prompt: ' codex'
    * payload: { model_context_window: number | null }
    */
   TASK_STARTED = 'task_started',
 
   /**
-   * 任务完成事件 - 代理已完成所有操作
-   * prompt: '你好 codex'
+   * prompt: ' codex'
    * payload: { last_agent_message: string | null }
    */
   TASK_COMPLETE = 'task_complete',
 
   // Text & reasoning events
   /**
-   * 代理消息增量事件 - 代理文本输出的增量消息（流式增量消息）
-   * prompt: '你好 codex'
+   * prompt: ' codex'
    * payload: { delta: string }
    */
   AGENT_MESSAGE_DELTA = 'agent_message_delta',
 
   /**
-   * 代理消息事件 - 代理文本输出消息（完整输出消息）
-   * prompt: '你好 codex'
+   * prompt: ' codex'
    * payload: { message: string }
    */
   AGENT_MESSAGE = 'agent_message',
 
   /**
-   * 用户消息事件 - 用户/系统输入消息（发送给模型的内容）
-   * prompt: '你好 codex'
+   * prompt: ' codex'
    * payload: { message: string, kind: InputMessageKind | null, images: string[] | null }
    */
   USER_MESSAGE = 'user_message',
 
   /**
-   * 代理推理事件 - 来自代理的推理事件（完整的思考文本）
-   * prompt: '我想翻阅codex收发消息原始数据格式的接口文档,应该去哪获取？'
+   * prompt: 'codex,'
    * payload: { text: string }
    */
   AGENT_REASONING = 'agent_reasoning',
 
   /**
-   * 代理推理增量事件 - 来自代理的推理增量事件（流式增量输出文本）
-   * prompt: '可以给我一个openAI 官方 url吗？'
+   * prompt: 'openAI url'
    * payload: { delta: string }
    */
   AGENT_REASONING_DELTA = 'agent_reasoning_delta',
 
   /**
-   * 代理推理原始内容事件 - 来自代理的原始思维链
-   * prompt: 'TypeScript 编译错误：'Property X does not exist'，请帮我分析原因'
+   * prompt: 'TypeScript 'Property X does not exist''
    * payload: { text: string }
    */
   AGENT_REASONING_RAW_CONTENT = 'agent_reasoning_raw_content',
 
   /**
-   * 代理推理原始内容增量事件 - 来自代理的推理内容增量事件
    * payload: { delta: string }
    */
   AGENT_REASONING_RAW_CONTENT_DELTA = 'agent_reasoning_raw_content_delta',
 
   /**
-   * 代理推理章节分隔事件 - 当模型开始新的推理摘要部分时发出信号（例如，新的标题块）
-   * prompt: 'TypeScript 编译错误：'Property X does not exist'，请帮我分析原因'
+   * prompt: 'TypeScript 'Property X does not exist''
    * payload: {}
    */
   AGENT_REASONING_SECTION_BREAK = 'agent_reasoning_section_break',
 
   // Usage / telemetry
   /**
-   * 令牌计数事件 - 当前会话的使用情况更新，包括总计和上一次
-   * prompt: '你好 codex'
+   * prompt: ' codex'
    * payload: { info: {
       "total_token_usage": {
         "input_tokens": 2439,
@@ -116,10 +104,9 @@ export enum CodexAgentEventType {
    */
   TOKEN_COUNT = 'token_count',
 
-  // 命令执行事件 Command execution events
+  // Command execution events
   /**
-   * 执行命令开始事件 - 通知服务器即将执行命令
-   * prompt: 'TypeScript 编译错误：'Property X does not exist'，请帮我分析原因'
+   * prompt: 'TypeScript 'Property X does not exist''
    * payload: {
       "type": "exec_command_begin",
       "call_id": "call_vufa8VWQV91WSWcc5BlFTsmQ",
@@ -137,8 +124,7 @@ export enum CodexAgentEventType {
   EXEC_COMMAND_BEGIN = 'exec_command_begin',
 
   /**
-   * 执行命令输出增量事件 - 正在运行命令的增量输出块
-   * prompt: 'TypeScript 编译错误：'Property X does not exist'，请帮我分析原因'
+   * prompt: 'TypeScript 'Property X does not exist''
    * payload: { call_id: string, stream: ExecOutputStream, chunk: number[] }
    * {
       "type": "exec_command_output_delta",
@@ -150,8 +136,7 @@ export enum CodexAgentEventType {
   EXEC_COMMAND_OUTPUT_DELTA = 'exec_command_output_delta',
 
   /**
-   * 执行命令结束事件 - 表示命令执行完成
-   * prompt: 'TypeScript 编译错误：'Property X does not exist'，请帮我分析原因'
+   * prompt: 'TypeScript 'Property X does not exist''
    * payload: {
    *  "type": "exec_command_end",
    *  "call_id": "call_vufa8VWQV91WSWcc5BlFTsmQ",
@@ -169,8 +154,7 @@ export enum CodexAgentEventType {
   EXEC_COMMAND_END = 'exec_command_end',
 
   /**
-   * 执行批准请求事件 - 请求批准命令执行
-   * prompt: 帮我创建一个文件 hello.txt , 内容为 ’hello codex‘
+   * prompt: hello.txt , ’hello codex‘
    * payload:  {
       "type": "exec_approval_request",
       "call_id": "call_W5qxMSKOP2eHaEq16QCtrhVS",
@@ -181,10 +165,9 @@ export enum CodexAgentEventType {
    */
   EXEC_APPROVAL_REQUEST = 'exec_approval_request',
 
-  //  补丁/文件修改事件 Patch/file modification events
+  //  / Patch/file modification events
   /**
-   * 应用补丁批准请求事件 - 请求批准应用代码补丁
-   * prompt: 帮我创建一个文件 hello.txt , 内容为 ’hello codex‘
+   * prompt: hello.txt , ’hello codex‘
    * payload: {
       type: 'apply_patch_approval_request',
       call_id: 'patch-7',
@@ -199,10 +182,9 @@ export enum CodexAgentEventType {
   APPLY_PATCH_APPROVAL_REQUEST = 'apply_patch_approval_request',
 
   /**
-   * 补丁应用开始事件 - 通知代理即将应用代码补丁。镜像 `ExecCommandBegin`，以便前端可以显示进度指示器
-   * tips: codex 运行在 sandbox_mode=read-only 模式下，无法直接写入文件，不会触发 patch_apply_begin → patch_apply_end 流程。
-   *      需要在 ~/.codex/config.toml 中 修改配置，sandbox_mode = "workspace-write" apply_patch = true
-   * prompt: 用命令 apply_patch <<'PATCH' … PATCH 写入一个文件，内容和文件名你自由发挥
+   * tips: codex sandbox_mode=read-only patch_apply_begin → patch_apply_end
+   * ~/.codex/config.toml sandbox_mode = "workspace-write" apply_patch = true
+   * prompt: apply_patch <<'PATCH' PATCH
    * payload: {
       "type": "patch_apply_begin",
           "call_id": "call_3tChlyDszdHuQRQTWnuZ8Jvb",
@@ -219,8 +201,7 @@ export enum CodexAgentEventType {
   PATCH_APPLY_BEGIN = 'patch_apply_begin',
 
   /**
-   * 补丁应用结束事件 - 通知补丁应用已完成
-   * prompt:  用命令 apply_patch <<'PATCH' … PATCH 写入一个文件，内容和文件名你自由发挥
+   * prompt: apply_patch <<'PATCH' PATCH
    * payload: {
       "type": "patch_apply_end",
       "call_id": "call_3tChlyDszdHuQRQTWnuZ8Jvb",
@@ -233,9 +214,8 @@ export enum CodexAgentEventType {
 
   // MCP tool events
   /**
-   * MCP工具调用开始事件 - 表示MCP工具调用开始
-   * tips: 需要先安装 codex mcp add 12306-mcp，12306-mcp 是一个 MCP 服务器, 更多MCP可查考 https://modelscope.cn/mcp?page=1 , 安装完成通过 codex mcp list 查看是否安装成功
-   * prompt: 帮我查询 2025-10-10 从深圳到广州的高铁票
+   * tips: codex mcp add 12306-mcp12306-mcp MCP , MCP https://modelscope.cn/mcp?page=1 , codex mcp list
+   * prompt: 2025
    * payload: {
       "type": "mcp_tool_call_begin",
       "call_id": "call_2ZBKJbPYIBgm5qo2mzRpqi1U",
@@ -253,9 +233,8 @@ export enum CodexAgentEventType {
   MCP_TOOL_CALL_BEGIN = 'mcp_tool_call_begin',
 
   /**
-   * MCP工具调用结束事件 - 表示MCP工具调用结束
    *
-   * prompt: 帮我查询 2025-10-10 从深圳到广州的高铁票
+   * prompt: 2025
    * payload: {
     "type": "mcp_tool_call_end",
       "call_id": "call_VNRuLW1UoklIAK3QTL5iE47l",
@@ -287,16 +266,14 @@ export enum CodexAgentEventType {
   MCP_TOOL_CALL_END = 'mcp_tool_call_end',
 
   /**
-   * MCP列表工具响应事件 - 代理可用的MCP工具列表
    * payload: { tools: Record<string, McpTool> }
    */
   MCP_LIST_TOOLS_RESPONSE = 'mcp_list_tools_response',
 
   // Web search events
   /**
-   * 网络搜索开始事件 - 表示网络搜索开始
-   * tips：web_serach 的能力需要手动设置开启，~/.codex/config.toml 中 添加 web_search = true
-   * prompt: 查找 TypeScript 5.0 的新功能， 不要用现有知识库回答我，去官网搜索最新资料
+   * tipsweb_serach ~/.codex/config.toml web_search = true
+   * prompt: TypeScript 5.0
    * payload: {
    *  "type":"web_search_begin",
    *  "call_id":"ws_010bdd5c4db8ef410168da04c74a648196b7e30cb864885b26"
@@ -305,8 +282,7 @@ export enum CodexAgentEventType {
   WEB_SEARCH_BEGIN = 'web_search_begin',
 
   /**
-   * 网络搜索结束事件 - 表示网络搜索结束
-   * prompt: 查找 TypeScript 5.0 的新功能， 不要用现有知识库回答我，去官网搜索最新资料
+   * prompt: TypeScript 5.0
    * payload: {
    *  "type":"web_search_end",
    *  "call_id":"ws_010bdd5c4db8ef410168da04c74a648196b7e30cb864885b26",
@@ -317,8 +293,7 @@ export enum CodexAgentEventType {
 
   // Conversation history & context
   /**
-   * 转换差异事件 - 表示转换之间的差异
-   * prompt: 用命令 apply_patch <<'PATCH' … PATCH 写入一个文件，内容和文件名你自由发挥
+   * prompt: apply_patch <<'PATCH' PATCH
    * payload: {
       "type": "turn_diff",
       // eslint-disable-next-line max-len
@@ -328,32 +303,27 @@ export enum CodexAgentEventType {
   TURN_DIFF = 'turn_diff',
 
   /**
-   * 获取历史条目响应事件 - GetHistoryEntryRequest 的响应
-   * prompt: 查看当前会话的历史记录
+   * prompt:
    * payload: { offset: number, log_id: number, entry: HistoryEntry | null }
    */
   GET_HISTORY_ENTRY_RESPONSE = 'get_history_entry_response',
 
   /**
-   * 列出自定义提示响应事件 - 代理可用的自定义提示列表
    * payload: { custom_prompts: CustomPrompt[] }
    */
   LIST_CUSTOM_PROMPTS_RESPONSE = 'list_custom_prompts_response',
 
   /**
-   * 对话路径事件 - 表示对话路径信息
    * payload: { conversation_id: string, path: string }
    */
   CONVERSATION_PATH = 'conversation_path',
 
   /**
-   * 后台事件 - 后台处理事件
    * payload: { message: string }
    */
   BACKGROUND_EVENT = 'background_event',
 
   /**
-   * 转换中止事件 - 表示转换已中止
    * payload: { reason: TurnAbortReason }
    */
   TURN_ABORTED = 'turn_aborted',

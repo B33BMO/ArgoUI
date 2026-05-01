@@ -19,46 +19,38 @@ import type {
 export type AgentSource = 'builtin' | 'extension' | 'custom' | 'remote';
 
 export type AgentConfig = {
-  // Agent 身份
+  // Agent
   agentBackend: string;
   agentSource: AgentSource;
   agentId: string;
 
-  // 连接信息（决定使用哪种 Connector）
-  command?: string; // 由 AcpDetector 解析后的完整命令
-  args?: string[]; // 由 AcpDetector 解析后的完整参数
+  command?: string;
+  args?: string[];
   env?: Record<string, string>;
   remoteUrl?: string;
   remoteHeaders?: Record<string, string>;
 
-  // 进程选项
   processOptions?: {
-    gracePeriodMs?: number; // 三阶段关闭 Phase 1 等待时间，默认 100ms
+    gracePeriodMs?: number;
   };
 
-  // 会话配置
   cwd: string;
   mcpServers?: McpServer[];
   additionalDirectories?: string[];
 
-  // 可选预设（来自 relate_type = 'assistant'）
   presetPrompts?: string[];
   presetSkills?: string[];
   presetMcpServers?: McpServer[];
 
-  // Team MCP（D9 团队模式预留）
   teamMcpConfig?: McpServer;
 
-  // 认证
   authCredentials?: Record<string, string>;
 
-  // 恢复信息（从 DB 重建时使用）
   resumeSessionId?: string;
 
-  // 用户在 session 建立前的选择（如 Guid 页面选的 model / mode / config）
+  // mode / config）
   initialDesired?: InitialDesiredConfig;
 
-  // 其他
   yoloMode?: boolean;
 };
 

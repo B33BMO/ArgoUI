@@ -15,7 +15,7 @@
  * Translations are namespaced under `ext.{extensionName}` to avoid key collisions
  * with the core app or other extensions.
  *
- * Example: `i18n/zh-CN/extension.json` with `{ "displayName": "你好世界" }`
+ * Example: `i18n/zh-CN/extension.json` with `{ "displayName": "" }`
  * becomes accessible as `ext.hello-world.extension.displayName` in i18next.
  */
 
@@ -136,7 +136,7 @@ async function loadLocaleDir(localeDir: string): Promise<Record<string, unknown>
  *     "ext.hello-world": { "extension": { "displayName": "Hello World" }, ... }
  *   },
  *   "zh-CN": {
- *     "ext.hello-world": { "extension": { "displayName": "你好世界" }, ... }
+ * "ext.hello-world": { "extension": { "displayName": "" }, ... }
  *   }
  * }
  * ```

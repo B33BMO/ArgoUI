@@ -50,8 +50,8 @@ interface HandleAtCommandParams {
   messageId: number;
   signal: AbortSignal;
   /**
-   * 懒加载模式：不立即读取文件内容，只传递文件路径提示给 agent
-   * 让 agent 自主决定何时使用 read_file 工具读取文件
+   * agent
+   * agent read_file
    * Lazy loading mode: don't read file content immediately, only pass file path hints to agent
    * Let agent decide when to use read_file tool to read files
    */
@@ -380,7 +380,7 @@ export async function handleAtCommand({
 
   const processedQueryParts: PartUnion[] = [{ text: initialQueryText }];
 
-  // 懒加载模式：不读取文件内容，只传递文件路径提示给 agent
+  // agent
   // Lazy loading mode: don't read file content, only pass file path hints to agent
   if (lazyFileLoading) {
     const workspaceDirs = config.getWorkspaceContext().getDirectories();

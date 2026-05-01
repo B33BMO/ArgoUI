@@ -8,8 +8,6 @@ import type { CodexPermissionOption } from '../types/permissionTypes';
 import { PermissionType, PermissionSeverity, PERMISSION_DECISION_MAP } from '../types/permissionTypes';
 
 /**
- * 基础权限选项配置
- * 提供四种标准的权限决策选项
  */
 const BASE_PERMISSION_OPTIONS: ReadonlyArray<CodexPermissionOption> = [
   {
@@ -43,7 +41,6 @@ const BASE_PERMISSION_OPTIONS: ReadonlyArray<CodexPermissionOption> = [
 ] as const;
 
 /**
- * 权限配置接口
  */
 interface PermissionConfig {
   titleKey: string;
@@ -54,8 +51,6 @@ interface PermissionConfig {
 }
 
 /**
- * 预定义的权限配置
- * 为不同类型的权限请求提供标准化配置
  */
 const PERMISSION_CONFIGS: Record<PermissionType, PermissionConfig> = {
   [PermissionType.COMMAND_EXECUTION]: {
@@ -82,8 +77,6 @@ const PERMISSION_CONFIGS: Record<PermissionType, PermissionConfig> = {
 };
 
 /**
- * 创建特定权限类型的选项
- * 为每个选项生成类型特定的描述键
  */
 function createPermissionOptions(permissionType: PermissionType): CodexPermissionOption[] {
   return BASE_PERMISSION_OPTIONS.map((option) => ({
@@ -93,15 +86,12 @@ function createPermissionOptions(permissionType: PermissionType): CodexPermissio
 }
 
 /**
- * 获取权限配置
  */
 function getPermissionConfig(type: PermissionType): PermissionConfig {
   return PERMISSION_CONFIGS[type];
 }
 
 /**
- * 根据权限类型创建选项
- * 工厂函数，简化权限选项的创建
  */
 export function createPermissionOptionsForType(permissionType: PermissionType): CodexPermissionOption[] {
   const config = getPermissionConfig(permissionType);
@@ -109,14 +99,12 @@ export function createPermissionOptionsForType(permissionType: PermissionType): 
 }
 
 /**
- * 将UI选项决策转换为后端决策
  */
 export function mapPermissionDecision(optionId: keyof typeof PERMISSION_DECISION_MAP): string {
   return PERMISSION_DECISION_MAP[optionId] || 'denied';
 }
 
 /**
- * 获取权限类型的显示信息
  */
 export function getPermissionDisplayInfo(type: PermissionType) {
   const config = getPermissionConfig(type);

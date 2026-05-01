@@ -24,20 +24,19 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
 
   useEffect(() => {
     if (visible) {
-      // 重置状态
       setCurrentStep(1);
       setSelectedAgent('');
       setImportableServers([]);
       setLoadingImport(false);
 
-      // 初始化时检测可用的agents
+      // agents
       const loadAgents = async () => {
         try {
           const response = await acpConversation.getAvailableAgents.invoke();
           if (response.success && response.data) {
             const agents = response.data.map((agent) => ({ backend: agent.backend, name: agent.name }));
             setDetectedAgents(agents);
-            // 设置第一个agent为默认值
+            // agent
             if (agents.length > 1) {
               setSelectedAgent(agents[0].backend);
             }
@@ -52,12 +51,10 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
 
   const handleNextStep = async () => {
     if (currentStep === 1) {
-      // 步骤1 -> 步骤2: 选择Agent后，进入获取MCP阶段
       if (!selectedAgent) return;
       setCurrentStep(2);
       await handleImportFromCLI();
     } else if (currentStep === 2) {
-      // 步骤2 -> 步骤3: 执行导入，显示成功页面
       handleBatchImport();
       setCurrentStep(3);
     }
@@ -74,18 +71,17 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
   const handleImportFromCLI = async () => {
     setLoadingImport(true);
     try {
-      // 获取所有可用的agents
+      // agents
       const agentsResponse = await acpConversation.getAvailableAgents.invoke();
       if (!agentsResponse.success || !agentsResponse.data) {
         throw new Error('Failed to get available agents');
       }
 
-      // 通过IPC调用后端服务获取MCP配置
       const mcpResponse = await mcpService.getAgentMcpConfigs.invoke(agentsResponse.data);
       if (mcpResponse.success && mcpResponse.data) {
         const allServers: IMcpServer[] = [];
 
-        // 过滤选中的agent的服务器
+        // agent
         mcpResponse.data.forEach((agentConfig) => {
           if (agentConfig.source === selectedAgent) {
             allServers.push(...agentConfig.servers);
@@ -107,7 +103,6 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
   const handleBatchImport = () => {
     if (onBatchImport && importableServers.length > 0) {
       const serversToImport = importableServers.map((server) => {
-        // 为CLI导入的服务器生成标准的JSON格式
         const serverConfig: Record<string, string | string[] | Record<string, string>> = {
           description: server.description,
         };
@@ -134,7 +129,7 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
           enabled: server.enabled,
           transport: server.transport,
           status: server.status as IMcpServer['status'],
-          tools: (server.tools || []) as IMcpTool[], // 保留原始的 tools 信息
+          tools: (server.tools || []) as IMcpTool[], // tools
           originalJson: JSON.stringify({ mcpServers: { [server.name]: serverConfig } }, null, 2),
         };
       });
@@ -142,7 +137,7 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
     }
   };
 
-  // 渲染步骤1: 选择Agent
+  // 1: Agent
   const renderStep1 = () => (
     <div className='py-4'>
       <Select
@@ -161,7 +156,6 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
     </div>
   );
 
-  // 渲染步骤2: 获取MCP工具列表
   const renderStep2 = () => (
     <div>
       {loadingImport ? (
@@ -196,7 +190,6 @@ const OneClickImportModal: React.FC<OneClickImportModalProps> = ({ visible, onCa
     </div>
   );
 
-  // 渲染步骤3: 导入成功
   const renderStep3 = () => (
     <div>
       {importableServers.length > 0 ? (
