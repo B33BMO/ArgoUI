@@ -28,6 +28,7 @@ import { workerTaskManager } from './process/task/workerTaskManagerSingleton';
 import { setupApplicationMenu } from './process/utils/appMenu';
 import { startWebServer } from './process/webserver';
 import { initializeZoomFactor, setupZoomForWindow } from './process/utils/zoom';
+import { installNetworkAllowlist } from './process/utils/networkAllowlist';
 import {
   clearPendingDeepLinkUrl,
   getPendingDeepLinkUrl,
@@ -384,6 +385,10 @@ const handleAppReady = async (): Promise<void> => {
     }
     return net.fetch(pathToFileURL(filePath).href);
   });
+
+  // CMMC: install network allowlist (loopback + RFC1918 only) on the
+  // default session before any window/webview can issue requests.
+  installNetworkAllowlist();
 
   // Set dock icon in development mode on macOS
   // In production, the icon is set via forge.config.ts packagerConfig.icon
