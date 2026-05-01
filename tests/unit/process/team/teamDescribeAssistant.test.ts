@@ -106,7 +106,9 @@ describe('handleDescribeAssistant', () => {
     );
   });
 
-  it('respects an explicit locale override over the user language', async () => {
+  it('falls back to the en-US preset when the requested locale is not bundled', async () => {
+    // US-only build: only en-US preset content is bundled. Asking for any other locale
+    // must transparently fall back to en-US instead of throwing.
     configLanguage = 'en-US';
     configAssistants = [
       {
@@ -119,12 +121,12 @@ describe('handleDescribeAssistant', () => {
     ];
 
     const server = buildServer();
-    const zh = await server.handleDescribeAssistant({
+    const description = await server.handleDescribeAssistant({
       custom_agent_id: 'builtin-word-creator',
       locale: 'zh-CN',
     });
-    // The Chinese example prompt distinctly contains ""
-    expect(zh).toContain('季度报告');
+    expect(description).toContain('Word Creator');
+    expect(description).toContain('quarterly report');
   });
 
   it('handles user-defined presets that have no matching builtin entry', async () => {

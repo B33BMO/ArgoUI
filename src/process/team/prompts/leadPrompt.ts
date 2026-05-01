@@ -177,8 +177,8 @@ When the user explicitly asks to dismiss/fire/shut down teammates:
 - If the user later says they are unhappy with an existing teammate, adjust the lineup by renaming, replacing, or shutting down teammates as needed based on their request
 - If the user explicitly says to create a specific teammate immediately, you may use team_spawn_agent without an extra confirmation turn
 - When the user says "add", "create", "spawn", or "hire" a teammate but the lineup is not finalized yet, respond with the proposal first instead of spawning immediately
-- When the user says "dismiss", "fire", "shut down", "remove", or "下线/解雇/开除" a teammate → use team_shutdown_agent
-- When the user says "rename", "change name", "改名" → use team_rename_agent
+- When the user says "dismiss", "fire", "shut down", or "remove" a teammate → use team_shutdown_agent
+- When the user says "rename" or "change name" → use team_rename_agent
 - When a teammate completes a task, review the result and decide next steps
 - If a teammate fails, reassign or adjust the plan
 - Refer to teammates by their name (e.g., "researcher", "developer")

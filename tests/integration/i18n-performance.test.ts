@@ -98,7 +98,7 @@ describe('i18n Performance Tests', () => {
 
       await Promise.all(
         MODULES.map(async (module) => {
-          const modulePath = path.join(LOCALES_DIR, 'zh-CN', `${module}.json`);
+          const modulePath = path.join(LOCALES_DIR, 'en-US', `${module}.json`);
           const content = await fs.promises.readFile(modulePath, 'utf-8');
           return JSON.parse(content);
         })
@@ -109,28 +109,28 @@ describe('i18n Performance Tests', () => {
       expect(end - start).toBeLessThan(STARTUP_BUDGET_MS);
     });
 
-    it('should switch locale within time budget', async () => {
+    it('should re-load the same locale within time budget (US-only build has no alternate)', async () => {
       const loadedTranslations = new Map<string, Record<string, unknown>>();
 
-      const zhCNTranslations: Record<string, unknown> = {};
+      const enUSTranslations: Record<string, unknown> = {};
       for (const module of MODULES) {
-        const modulePath = path.join(LOCALES_DIR, 'zh-CN', `${module}.json`);
+        const modulePath = path.join(LOCALES_DIR, 'en-US', `${module}.json`);
         const content = await fs.promises.readFile(modulePath, 'utf-8');
-        zhCNTranslations[module] = JSON.parse(content);
+        enUSTranslations[module] = JSON.parse(content);
       }
-      loadedTranslations.set('zh-CN', zhCNTranslations);
+      loadedTranslations.set('en-US', enUSTranslations);
 
       const start = performance.now();
 
-      const jaJPTranslations: Record<string, unknown> = {};
+      const reload: Record<string, unknown> = {};
       await Promise.all(
         MODULES.map(async (module) => {
-          const modulePath = path.join(LOCALES_DIR, 'ja-JP', `${module}.json`);
+          const modulePath = path.join(LOCALES_DIR, 'en-US', `${module}.json`);
           const content = await fs.promises.readFile(modulePath, 'utf-8');
-          jaJPTranslations[module] = JSON.parse(content);
+          reload[module] = JSON.parse(content);
         })
       );
-      loadedTranslations.set('ja-JP', jaJPTranslations);
+      loadedTranslations.set('en-US', reload);
 
       const end = performance.now();
 
@@ -139,13 +139,10 @@ describe('i18n Performance Tests', () => {
   });
 
   describe('Lazy Loading Impact', () => {
-    it('should reduce startup memory by loading only required locale', () => {
-      const estimatedSizePerLocale = 100 * 1024;
-      const oldMemoryUsage = SUPPORTED_LANGUAGES.length * estimatedSizePerLocale;
-      const newMemoryUsage = estimatedSizePerLocale;
-
-      const reduction = (oldMemoryUsage - newMemoryUsage) / oldMemoryUsage;
-      expect(reduction).toBeGreaterThan(0.8);
+    it('only the supported locale is loaded at startup', () => {
+      // US-only build supports a single locale, so the loaded set equals the supported set.
+      expect(SUPPORTED_LANGUAGES).toHaveLength(1);
+      expect(SUPPORTED_LANGUAGES).toContain('en-US');
     });
   });
 });

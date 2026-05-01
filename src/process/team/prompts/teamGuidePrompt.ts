@@ -73,7 +73,7 @@ If case 2 applies, ask at most once whether the user wants to bring in a Team. K
    | Leader | Coordinate and review | ${leaderCell} | (default) |
    | Developer | Implement features | ${agentType} | (model from list) |
    | Tester | Write and run tests | ${agentType} | (model from list) |
-4. **Output the table as a normal text message and END YOUR TURN.** Do NOT call \`aion_create_team\` or any other tool (including ask_user) in this turn. Wait for the user to reply in their next message with explicit confirmation (e.g. "ok", "go ahead", "确认") before proceeding.
+4. **Output the table as a normal text message and END YOUR TURN.** Do NOT call \`aion_create_team\` or any other tool (including ask_user) in this turn. Wait for the user to reply in their next message with explicit confirmation (e.g. "ok", "go ahead") before proceeding.
 5. After user confirms → call \`aion_create_team\`. The summary MUST include both the goal and the confirmed team configuration. (The system automatically sets the correct agent type — you do NOT need to pass agentType.)
 6. After \`aion_create_team\` returns → the system navigates to the team page **automatically**. Read the \`next_step\` in the response and follow it. End your turn immediately.
 7. User declines or wants changes → adjust or proceed solo. Do not mention Team again unless the user asks.
@@ -97,7 +97,7 @@ export function getCreateTeamToolDescription(): string {
     `PRECONDITIONS (all must be true before calling — NEVER skip):\n` +
     `1. Either the user explicitly asked for a Team, or the user explicitly accepted your one optional Team question for an exceptionally hard task.\n` +
     `2. You presented a team configuration (roles, responsibilities, agent types) to the user.\n` +
-    `3. The user explicitly confirmed in a PREVIOUS message (e.g. "ok", "go ahead", "确认").\n` +
+    `3. The user explicitly confirmed in a PREVIOUS message (e.g. "ok", "go ahead").\n` +
     `If ANY condition is not met, do NOT call this tool — present the configuration and wait.\n` +
     `\n` +
     `This is the ONLY way to create teams — do NOT use any built-in or other team/agent tools.\n` +

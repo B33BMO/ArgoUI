@@ -65,6 +65,7 @@ describe('renderer i18n localStorage guards', () => {
     vi.clearAllMocks();
     mockI18n.language = 'en-US';
     mockI18n.languageChangedHandler = undefined;
+    // US-only build collapses any saved non-en-US language back to en-US.
     mockConfigStorageGet.mockResolvedValue('ja-JP');
     mockConfigStorageSet.mockResolvedValue(undefined);
     mockChangeLanguageInvoke.mockResolvedValue(undefined);
@@ -85,7 +86,7 @@ describe('renderer i18n localStorage guards', () => {
     vi.restoreAllMocks();
   });
 
-  it('initializes without localStorage and still loads the saved language', async () => {
+  it('initializes without localStorage and falls back to en-US (US-only build)', async () => {
     await import('@/renderer/services/i18n');
     await Promise.resolve();
     await Promise.resolve();
@@ -95,25 +96,28 @@ describe('renderer i18n localStorage guards', () => {
         lng: 'en-US',
       })
     );
-    expect(mockI18n.changeLanguage).toHaveBeenCalledWith('ja-JP');
+    // Any saved language is normalized to en-US in this build.
+    expect(mockI18n.changeLanguage).toHaveBeenCalledWith('en-US');
   });
 
-  it('updates language from the main-process broadcast without touching localStorage', async () => {
+  it('main-process language broadcasts collapse to en-US without touching localStorage', async () => {
     await import('@/renderer/services/i18n');
     await Promise.resolve();
 
     await mockOnLanguageChanged.handler?.({ language: 'ko-KR' });
 
-    expect(mockI18n.changeLanguage).toHaveBeenCalledWith('ko-KR');
+    // The renderer normalizes any incoming non-en-US language to en-US, and skips
+    // the change since i18n is already on en-US — so changeLanguage is NOT called again.
+    expect(mockI18n.changeLanguage).not.toHaveBeenCalledWith('ko-KR');
   });
 
-  it('persists language through ConfigStorage even when localStorage is unavailable', async () => {
+  it('persists language through ConfigStorage (always en-US in US-only build)', async () => {
     const module = await import('@/renderer/services/i18n');
     await Promise.resolve();
 
     await module.changeLanguage('tr');
 
-    expect(mockConfigStorageSet).toHaveBeenCalledWith('language', 'tr-TR');
-    expect(mockChangeLanguageInvoke).toHaveBeenCalledWith({ language: 'tr-TR' });
+    expect(mockConfigStorageSet).toHaveBeenCalledWith('language', 'en-US');
+    expect(mockChangeLanguageInvoke).toHaveBeenCalledWith({ language: 'en-US' });
   });
 });

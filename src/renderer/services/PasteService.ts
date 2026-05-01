@@ -188,7 +188,7 @@ class PasteServiceClass {
               if (error instanceof Error && error.message === 'FILE_TOO_LARGE') {
                 throw error;
               }
-              console.error('创建临时文件失败:', error);
+              console.error('Failed to create temp file:', error);
             }
           } else {
             console.warn(`Unsupported image type: ${file.type}, extension: ${fileExt}`);
@@ -249,7 +249,7 @@ class PasteServiceClass {
               if (error instanceof Error && error.message === 'FILE_TOO_LARGE') {
                 throw error;
               }
-              console.error('创建临时文件失败:', error);
+              console.error('Failed to create temp file:', error);
             }
           } else {
             console.warn(`Unsupported file type: ${file.name}, extension: ${fileExt}`);

@@ -147,9 +147,6 @@ function extractAssistantNameFromRules(rules: string): string | null {
   const headingMatch = trimmed.match(/^\s*#\s+(.+?)\s*$/m);
   if (headingMatch?.[1]) return headingMatch[1].trim();
 
-  const zhAssistantMatch = trimmed.match(/你是\s+\*\*([^*]+)\*\*/);
-  if (zhAssistantMatch?.[1]) return zhAssistantMatch[1].trim();
-
   const enAssistantMatch = trimmed.match(/you are\s+\*\*([^*]+)\*\*/i);
   if (enAssistantMatch?.[1]) return enAssistantMatch[1].trim();
 

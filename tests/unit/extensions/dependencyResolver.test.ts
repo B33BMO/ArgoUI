@@ -11,7 +11,7 @@ import {
 } from '../../../src/process/extensions/resolvers/utils/dependencyResolver';
 
 describe('extensions/dependencyResolver', () => {
-  it('应在依赖满足时返回有效结果，并给出正确加载顺序', () => {
+  it('returns a valid result with the correct load order when dependencies are satisfied', () => {
     const extensions = [
       { name: 'feature', version: '2.0.0', dependencies: { ui: '~0.5.0' } },
       { name: 'core', version: '1.2.0' },
@@ -26,7 +26,7 @@ describe('extensions/dependencyResolver', () => {
     expect(result.loadOrder.indexOf('ui')).toBeLessThan(result.loadOrder.indexOf('feature'));
   });
 
-  it('应报告缺失依赖与版本不匹配问题', () => {
+  it('reports missing dependencies and version mismatches', () => {
     const extensions = [
       { name: 'consumer', version: '1.0.0', dependencies: { missing: '^1.0.0', provider: '^0.0.3' } },
       { name: 'provider', version: '0.0.4' },
@@ -54,7 +54,7 @@ describe('extensions/dependencyResolver', () => {
     );
   });
 
-  it('应检测循环依赖', () => {
+  it('detects circular dependencies', () => {
     const extensions = [
       { name: 'a', version: '1.0.0', dependencies: { b: '^1.0.0' } },
       { name: 'b', version: '1.0.0', dependencies: { a: '^1.0.0' } },
@@ -72,7 +72,7 @@ describe('extensions/dependencyResolver', () => {
     );
   });
 
-  it('sortByDependencyOrder 应按 loadOrder 排序，未知项置于末尾', () => {
+  it('sortByDependencyOrder sorts by loadOrder and pushes unknown entries to the end', () => {
     const sorted = sortByDependencyOrder(
       [
         { name: 'a', version: '1.0.0' },

@@ -7,11 +7,11 @@
 import { SUPPORTED_LANGUAGES } from '@/common/config/i18n';
 
 describe('i18n config', () => {
-  it('should include uk-UA in supported languages', () => {
-    expect(SUPPORTED_LANGUAGES).toContain('uk-UA');
+  it('should include en-US in supported languages', () => {
+    expect(SUPPORTED_LANGUAGES).toContain('en-US');
   });
 
-  it('should have zh-CN as the first language in this project', () => {
-    expect(SUPPORTED_LANGUAGES[0]).toBe('zh-CN');
+  it('should have en-US as the only language in this US-only build', () => {
+    expect(SUPPORTED_LANGUAGES).toEqual(['en-US']);
   });
 });

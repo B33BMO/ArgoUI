@@ -56,8 +56,8 @@ function extractText(message) {
   if (!message) return '';
   if (typeof message.text === 'string') return message.text;
   if (message.type === 'text' && typeof message.text === 'string') return message.text;
-  if (typeof message.fileName === 'string' && message.fileName) return `[文件] ${message.fileName}`;
-  if (typeof message.imageUrl === 'string' && message.imageUrl) return `[图片] ${message.imageUrl}`;
+  if (typeof message.fileName === 'string' && message.fileName) return `[file] ${message.fileName}`;
+  if (typeof message.imageUrl === 'string' && message.imageUrl) return `[image] ${message.imageUrl}`;
   return '';
 }
 
@@ -127,7 +127,7 @@ class ExtWecomBotChannelPlugin {
   }
 
   getBotInfo() {
-    return { displayName: '企业微信 AI Bot (Example)' };
+    return { displayName: 'WeCom AI Bot (Example)' };
   }
 
   verifySignature(signature, timestamp, nonce, encrypted) {

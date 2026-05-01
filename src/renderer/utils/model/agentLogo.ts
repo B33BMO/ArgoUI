@@ -135,7 +135,7 @@ export function hasAgentLogo(agent: string | undefined | null): boolean {
  */
 export const isDefaultModel = (value?: string | null, label?: string | null): boolean => {
   const text = `${value || ''} ${label || ''}`.toLowerCase();
-  return text.includes('default') || text.includes('recommended') || text.includes('默认');
+  return text.includes('default') || text.includes('recommended');
 };
 
 /**

@@ -360,7 +360,7 @@ export class AcpAgent {
             // Detect third-party relay/proxy errors (e.g., NewAPI/OneAPI "model_not_found").
             // These services route by the underlying model mapped to the selected slot.
             // Emit a visible warning so the user knows to update the relay-side mapping.
-            if (errMsg.includes('model_not_found') || errMsg.includes('无可用渠道')) {
+            if (errMsg.includes('model_not_found') || errMsg.includes('no available channel')) {
               this.emitErrorMessage(
                 `Claude slot "${configuredModel}" could not be activated on your API relay service. ` +
                   `Please check the model mapping in cc-switch or ~/.claude/settings.json. ` +
@@ -746,7 +746,7 @@ export class AcpAgent {
       let errorType: AcpErrorType = AcpErrorType.UNKNOWN;
       let retryable = false;
 
-      if (errorMsg.includes('authentication') || errorMsg.includes('认证失败') || errorMsg.includes('[ACP-AUTH-')) {
+      if (errorMsg.includes('authentication') || errorMsg.includes('[ACP-AUTH-')) {
         errorType = AcpErrorType.AUTHENTICATION_FAILED;
         retryable = false;
       } else if (errorMsg.includes('timeout') || errorMsg.includes('Timeout') || errorMsg.includes('timed out')) {

@@ -179,14 +179,12 @@ export const CollapsibleContent: React.FC<CollapsibleContentProps> = ({
         {children}
       </div>
 
-      {/* 渐变遮罩（仅在非 mask 模式、折叠且内容超出时显示）
-          Gradient mask (only shown in non-mask mode when collapsed and content exceeds)
-          采用多段渐变实现内容淡出效果：
+      {/* Gradient mask (only shown in non-mask mode when collapsed and content exceeds)
           Multi-step gradient for content fade-out effect:
-          - 0%: 完全透明，内容清晰可见 Fully transparent, content clearly visible
-          - 40%: 60% 不透明度，内容隐约可见 60% opacity, content faintly visible
-          - 80%: 95% 不透明度，内容几乎看不见 95% opacity, content barely visible
-          - 100%: 完全不透明，融入背景色 Fully opaque, blends with background */}
+          - 0%: Fully transparent, content clearly visible
+          - 40%: 60% opacity, content faintly visible
+          - 80%: 95% opacity, content barely visible
+          - 100%: Fully opaque, blends with background */}
       {!useMask && needsCollapse && isCollapsed && (
         <div
           className='absolute bottom-0 left-0 right-0 pointer-events-none'

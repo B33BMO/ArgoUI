@@ -122,7 +122,7 @@ const AgentPillBar: React.FC<AgentPillBarProps> = ({
             );
           })}
         {!isMobile && <div className='text-16px lh-1 p-2px select-none opacity-30'>|</div>}
-        <Tooltip content={t('settings.agentManagement.discoverMoreAgents', { defaultValue: '发现更多 Agent' })}>
+        <Tooltip content={t('settings.agentManagement.discoverMoreAgents', { defaultValue: 'Discover more agents' })}>
           <div
             className='flex items-center justify-center cursor-pointer p-4px opacity-60 hover:opacity-100 self-center'
             style={{ transition: 'opacity 0.2s ease', flexShrink: 0, marginTop: 4 }}

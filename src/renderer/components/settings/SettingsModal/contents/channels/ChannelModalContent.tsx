@@ -632,14 +632,15 @@ const ChannelModalContent: React.FC = () => {
           )}
           {pluginType === 'ext-wecom-bot' && (
             <div className='text-12px leading-relaxed p-10px rd-8px bg-[rgba(var(--orange-6),0.08)] border border-[rgba(var(--orange-6),0.3)] text-t-secondary'>
-              <div className='font-500 text-t-primary mb-6px'>企微回调地址说明</div>
-              <div>本机 Callback URL: {localCallbackUrl}</div>
-              {lanCallbackUrl ? <div>局域网 Callback URL: {lanCallbackUrl}</div> : null}
-              {publicCallbackUrl ? <div>公网 Callback URL(配置值): {publicCallbackUrl}</div> : null}
+              <div className='font-500 text-t-primary mb-6px'>WeCom callback URL notes</div>
+              <div>Local Callback URL: {localCallbackUrl}</div>
+              {lanCallbackUrl ? <div>LAN Callback URL: {lanCallbackUrl}</div> : null}
+              {publicCallbackUrl ? <div>Public Callback URL (configured): {publicCallbackUrl}</div> : null}
               <div className='mt-6px'>
-                仅开启 WebUI 远程访问（LAN）通常不能直接通过企微回调。企微服务器需要可访问的公网 HTTPS 地址。
+                Enabling only WebUI remote access (LAN) generally cannot serve WeCom callbacks directly. WeCom servers
+                require a publicly reachable HTTPS endpoint.
               </div>
-              <div>建议：使用反向代理 + 证书，或 Cloudflare Tunnel / ngrok 映射到本机。</div>
+              <div>Recommended: reverse proxy + TLS certificate, or Cloudflare Tunnel / ngrok mapped to this host.</div>
             </div>
           )}
           {fields.map((field) => {

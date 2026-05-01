@@ -436,7 +436,7 @@ export const ASSISTANT_PRESETS: AssistantPreset[] = [
     skillFiles: {
       'en-US': 'social-job-publisher-skills.md',
     },
-    defaultEnabledSkills: ['xiaohongshu-recruiter', 'x-recruiter'],
+    defaultEnabledSkills: ['x-recruiter'],
     nameI18n: {
       'en-US': 'Social Job Publisher',
     },

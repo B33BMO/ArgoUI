@@ -664,7 +664,7 @@ const WebuiModalContent: React.FC = () => {
           </div>
         </div>
 
-        {/* Messaging 强引导入口 / Messaging primary entry — disabled, kept for future use
+        {/* Messaging primary entry — disabled, kept for future use
         <div className='rd-12px border border-line bg-2 px-12px py-10px flex items-center justify-between gap-10px'>
             <div className='min-w-0 flex items-center gap-8px'>
               <Communication theme='outline' size='18' className='text-[rgb(var(--primary-6))] shrink-0' />

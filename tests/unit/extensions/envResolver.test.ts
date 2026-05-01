@@ -42,7 +42,7 @@ describe('extensions/envResolver', () => {
     warnSpy.mockRestore();
   });
 
-  it('非严格模式下未定义变量应替换为空字符串', () => {
+  it('replaces undefined variables with an empty string in non-strict mode', () => {
     delete process.env.MISSING_VALUE;
 
     const result = resolveEnvTemplates('token=${env:MISSING_VALUE}', { strictMode: false });
@@ -51,13 +51,13 @@ describe('extensions/envResolver', () => {
     expect(warnSpy).toHaveBeenCalled();
   });
 
-  it('严格模式下未定义变量应抛出 UndefinedEnvVariableError', () => {
+  it('throws UndefinedEnvVariableError for undefined variables in strict mode', () => {
     delete process.env.REQUIRED_TOKEN;
 
     expect(() => resolveEnvTemplates('${env:REQUIRED_TOKEN}', { strictMode: true })).toThrow(UndefinedEnvVariableError);
   });
 
-  it('resolveEnvInObject 应递归解析对象与数组中的模板', () => {
+  it('resolveEnvInObject resolves templates recursively across nested objects and arrays', () => {
     process.env.API_KEY = 'abc123';
     process.env.REGION = 'ap-guangzhou';
 
@@ -82,7 +82,7 @@ describe('extensions/envResolver', () => {
     });
   });
 
-  it('全局严格模式应缓存并可通过 clearStrictModeCache 失效', () => {
+  it('caches the global strict-mode flag and lets clearStrictModeCache invalidate it', () => {
     process.env[AIONUI_STRICT_ENV_ENV] = '1';
     clearStrictModeCache();
 

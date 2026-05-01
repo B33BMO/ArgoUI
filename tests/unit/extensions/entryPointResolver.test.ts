@@ -21,7 +21,7 @@ describe('extensions/entryPointResolver', () => {
     await fs.rm(extensionDir, { recursive: true, force: true });
   });
 
-  it('优先解析 dist 入口（兼容源码声明）', async () => {
+  it('prefers the dist entry point (with source-declaration compatibility)', async () => {
     const srcPath = path.join(extensionDir, 'channels', 'plugin.js');
     const distPath = path.join(extensionDir, 'dist', 'channels', 'plugin.js');
 
@@ -34,7 +34,7 @@ describe('extensions/entryPointResolver', () => {
     expect(resolved).toBe(distPath);
   });
 
-  it('当 dist 不存在时回退到源码入口', async () => {
+  it('falls back to the source entry point when dist is missing', async () => {
     const srcPath = path.join(extensionDir, 'channels', 'plugin.js');
     await fs.mkdir(path.dirname(srcPath), { recursive: true });
     await fs.writeFile(srcPath, 'module.exports = "src";', 'utf-8');

@@ -74,7 +74,7 @@ export const PRESET_THEMES: ICssTheme[] = [
   },
   {
     id: 'retroma-y2k-jp-v42-pure',
-    name: 'Y2K电子账本 by 椰树女王',
+    name: 'Y2K Digital Ledger by Coconut Tree Queen',
     isPreset: true,
     cover: y2kJpCover,
     css: retromaY2kCss,

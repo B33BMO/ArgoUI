@@ -132,7 +132,7 @@ export class Pipe {
    */
   call(name: string, data: any, extPrams: any = {}) {
     if (this.isClose) {
-      console.log('---主进程已关闭', name, '执行失败！!');
+      console.log('---main process already closed', name, 'call failed!');
       return;
     }
     const msg = { type: name, data: data, ...extPrams };
@@ -143,7 +143,7 @@ export class Pipe {
       // Node.js child_process.fork
       process.send(msg);
     } else {
-      console.error('---非子线程，无法使用主线程事件机制');
+      console.error('---not a child process; main-thread event mechanism unavailable');
     }
   }
   callPromise<T = any>(name: string, data: any) {

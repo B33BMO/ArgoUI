@@ -24,7 +24,7 @@ describe('extensions/fileResolver', () => {
     await fs.rm(extensionDir, { recursive: true, force: true });
   });
 
-  it('应解析文本文件引用并去除末尾换行', async () => {
+  it('resolves a text-file reference and strips the trailing newline', async () => {
     await fs.writeFile(path.join(extensionDir, 'prompt.txt'), 'hello world\n', 'utf-8');
 
     const result = await resolveFileRefs('$file:prompt.txt', extensionDir);
@@ -32,7 +32,7 @@ describe('extensions/fileResolver', () => {
     expect(result).toBe('hello world');
   });
 
-  it('应支持 JSON/JSONC 中的嵌套 $file 引用', async () => {
+  it('supports nested $file references inside JSON/JSONC', async () => {
     await fs.mkdir(path.join(extensionDir, 'meta'), { recursive: true });
     await fs.writeFile(path.join(extensionDir, 'meta', 'title.txt'), 'My Title\n', 'utf-8');
     await fs.writeFile(path.join(extensionDir, 'meta', 'name.txt'), 'Alice\n', 'utf-8');
@@ -57,7 +57,7 @@ describe('extensions/fileResolver', () => {
     });
   });
 
-  it('应阻止目录穿越并保留原始引用', async () => {
+  it('blocks directory traversal and preserves the original reference', async () => {
     const outsideFile = path.join(path.dirname(extensionDir), 'outside.txt');
     await fs.writeFile(outsideFile, 'outside', 'utf-8');
 
@@ -69,7 +69,7 @@ describe('extensions/fileResolver', () => {
     await fs.rm(outsideFile, { force: true });
   });
 
-  it('应阻止通过符号链接读取扩展目录外的文件', async () => {
+  it('blocks reading files outside the extension directory through symlinks', async () => {
     const outsideDir = await fs.mkdtemp(path.join(os.tmpdir(), 'aionui-ext-outside-'));
     const outsideFile = path.join(outsideDir, 'secret.txt');
     const symlinkDir = path.join(extensionDir, 'linked');
@@ -85,7 +85,7 @@ describe('extensions/fileResolver', () => {
     await fs.rm(outsideDir, { recursive: true, force: true });
   });
 
-  it('应在循环引用时回退为原始引用字符串', async () => {
+  it('falls back to the original reference string on circular references', async () => {
     await fs.writeFile(path.join(extensionDir, 'a.json'), '{"next":"$file:b.json"}', 'utf-8');
     await fs.writeFile(path.join(extensionDir, 'b.json'), '{"next":"$file:a.json"}', 'utf-8');
 
@@ -99,7 +99,7 @@ describe('extensions/fileResolver', () => {
     expect(warnSpy).toHaveBeenCalled();
   });
 
-  it('应在文件不存在时保留原始引用', async () => {
+  it('preserves the original reference when the file does not exist', async () => {
     const result = await resolveFileRefs('$file:not-exists.txt', extensionDir);
 
     expect(result).toBe('$file:not-exists.txt');

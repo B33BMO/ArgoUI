@@ -40,7 +40,7 @@ const QR_LOGIN_PAGE_HTML = `<!DOCTYPE html>
 <body>
   <div class="container" id="content">
     <div class="spinner"></div>
-    <p class="loading">Verifying... / 验证中...</p>
+    <p class="loading">Verifying...</p>
   </div>
   <script>
     (async function() {
@@ -48,7 +48,7 @@ const QR_LOGIN_PAGE_HTML = `<!DOCTYPE html>
       var params = new URLSearchParams(window.location.search);
       var qrToken = params.get('token');
       if (!qrToken) {
-        container.innerHTML = '<h2 class="error">Invalid QR Code</h2><p>The QR code is invalid or missing.</p><p>二维码无效或缺失。</p>';
+        container.innerHTML = '<h2 class="error">Invalid QR Code</h2><p>The QR code is invalid or missing.</p>';
         return;
       }
       try {
@@ -60,7 +60,7 @@ const QR_LOGIN_PAGE_HTML = `<!DOCTYPE html>
         });
         var data = await response.json();
         if (data.success) {
-          container.innerHTML = '<h2 class="success">Login Successful!</h2><p>Redirecting... / 登录成功，正在跳转...</p>';
+          container.innerHTML = '<h2 class="success">Login Successful!</h2><p>Redirecting...</p>';
           setTimeout(function() { window.location.href = '/'; }, 1000);
         } else {
           // XSS Security fix: Use textContent instead of innerHTML for error message
@@ -69,15 +69,12 @@ const QR_LOGIN_PAGE_HTML = `<!DOCTYPE html>
           h2.textContent = 'Login Failed';
           var p1 = document.createElement('p');
           p1.textContent = data.error || 'QR code expired or invalid';
-          var p2 = document.createElement('p');
-          p2.textContent = '二维码已过期或无效，请重新扫描。';
           container.innerHTML = '';
           container.appendChild(h2);
           container.appendChild(p1);
-          container.appendChild(p2);
         }
       } catch (e) {
-        container.innerHTML = '<h2 class="error">Error</h2><p>Network error. Please try again.</p><p>网络错误，请重试。</p>';
+        container.innerHTML = '<h2 class="error">Error</h2><p>Network error. Please try again.</p>';
       }
     })();
   </script>

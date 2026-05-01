@@ -37,7 +37,7 @@ class ExtFeishuChannelPlugin {
   }
 
   getBotInfo() {
-    return { displayName: 'ext-飞书 Bot (Example)' };
+    return { displayName: 'ext-feishu Bot (Example)' };
   }
 
   async sendMessage(chatId, message) {

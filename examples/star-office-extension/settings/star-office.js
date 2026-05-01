@@ -25,12 +25,12 @@
   const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
   const STATUS_TEXT = {
-    idle: '待命',
-    writing: '写作',
-    researching: '调研',
-    executing: '执行',
-    syncing: '同步',
-    error: '错误',
+    idle: 'Idle',
+    writing: 'Writing',
+    researching: 'Researching',
+    executing: 'Executing',
+    syncing: 'Syncing',
+    error: 'Error',
   };
 
   const runtimeToState = (runtimeStatus) => {
@@ -57,7 +57,7 @@
         state,
         runtimeStatus: String(a.runtimeStatus || 'unknown'),
         lastActiveAt: Number(a.lastActiveAt || now()),
-        currentTask: a.currentTask ? String(a.currentTask) : `${STATUS_TEXT[state]}中`,
+        currentTask: a.currentTask ? String(a.currentTask) : `${STATUS_TEXT[state]}...`,
         recentEvents: Array.isArray(a.recentEvents)
           ? a.recentEvents.slice(0, 3).map((e) => ({
               at: Number(e.at || now()),
@@ -94,8 +94,8 @@
         lastActiveAt: now() - rnd(1000, 240000),
         currentTask: `${STATUS_TEXT[state]} · workspace-${(idx % 3) + 1}`,
         recentEvents: [
-          { at: now() - rnd(2000, 200000), text: `${name} ${STATUS_TEXT[state]}中` },
-          { at: now() - rnd(1000, 300000), text: `${name} 更新会话状态` },
+          { at: now() - rnd(2000, 200000), text: `${name} ${STATUS_TEXT[state]}...` },
+          { at: now() - rnd(1000, 300000), text: `${name} updated session state` },
         ],
       };
     });
@@ -109,7 +109,7 @@
   };
 
   const setSourceText = (text) => {
-    sourceEl.textContent = `数据源：${text}`;
+    sourceEl.textContent = `Data source: ${text}`;
   };
 
   const renderStats = (snapshot) => {
@@ -211,7 +211,7 @@
     }
 
     mode = 'mock';
-    setSourceText('Mock data (扩展独立可运行)');
+    setSourceText('Mock data (extension runs standalone)');
     renderSnapshot(buildMockSnapshot());
   };
 
@@ -231,7 +231,7 @@
 
     if (data.type === 'star-office:toggle-autoplay') {
       autoPlay = !!data.enabled;
-      autoplayBtn.textContent = `自动轮询：${autoPlay ? '开' : '关'}`;
+      autoplayBtn.textContent = `Auto-refresh: ${autoPlay ? 'on' : 'off'}`;
     }
   });
 

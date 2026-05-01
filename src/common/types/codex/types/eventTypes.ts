@@ -255,7 +255,7 @@ export enum CodexAgentEventType {
           "Ok": {
           "content": [
             {
-            "text": "车次|出发站 -> 到达站|出发时间 -> 到达时间|历时\nG834 深圳北(telecode:IOQ) -> 广州南(telecode:IZQ) 06:10 -> 06:46 历时：00:36\n-……",
+            "text": "train|origin -> destination|departure -> arrival|duration\nEXAMPLE example_origin -> example_destination 06:10 -> 06:46 duration: 00:36\n-...",
             "type": "text"
             }
           ]

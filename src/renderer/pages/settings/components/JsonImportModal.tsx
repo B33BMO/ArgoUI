@@ -306,7 +306,7 @@ const JsonImportModal: React.FC<JsonImportModalProps> = ({ visible, server, onCa
                       setCopyStatus('success');
                       setTimeout(() => setCopyStatus('idle'), 2000);
                     } catch (err) {
-                      console.error('Copy failed 复制失败:', err);
+                      console.error('Copy failed:', err);
                       setCopyStatus('error');
                       setTimeout(() => setCopyStatus('idle'), 2000);
                     }

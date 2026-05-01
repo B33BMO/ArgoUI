@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-export const DEFAULT_THINKING_TEXT = '思考中...';
+export const DEFAULT_THINKING_TEXT = 'Thinking...';
 
 const STREAM_IDLE_MS = 30_000;
 const STREAM_TTL_MS = 5 * 60_000;

@@ -91,7 +91,7 @@ module.exports = async function extWecomWebhook(req, res) {
     if (!stream) {
       const expired = createStream(streamId, 'expired');
       upsertStreamContent(streamId, {
-        visibleContent: '会话已过期',
+        visibleContent: 'Session expired',
         thinkingContent: '',
         finished: true,
       });
@@ -117,7 +117,7 @@ module.exports = async function extWecomWebhook(req, res) {
 
   plugin.handleInboundMessage(payload, streamId).catch((error) => {
     upsertStreamContent(streamId, {
-      visibleContent: `处理失败: ${error instanceof Error ? error.message : String(error)}`,
+      visibleContent: `Processing failed: ${error instanceof Error ? error.message : String(error)}`,
       thinkingContent: '',
     });
     finishStream(streamId);

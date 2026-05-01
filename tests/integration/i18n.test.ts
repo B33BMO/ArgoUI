@@ -79,25 +79,35 @@ describe('i18n Modular Structure Tests', () => {
   });
 
   describe('Translation Key Consistency', () => {
-    // Use en-US as the baseline
+    // Use en-US as the baseline. US-only build only ships the reference language.
     const referenceLang = i18nConfig.referenceLanguage;
-    const referenceModules: Record<string, string[]> = {};
 
-    beforeAll(() => {
-      // Collect all baseline keys
+    it('reference language has at least one module file with keys', () => {
+      let totalKeys = 0;
       for (const module of REQUIRED_MODULES) {
         const moduleFile = path.join(LOCALES_DIR, referenceLang, `${module}.json`);
         if (fs.existsSync(moduleFile)) {
           const content = JSON.parse(fs.readFileSync(moduleFile, 'utf-8'));
-          referenceModules[module] = getAllKeys(content);
+          totalKeys += getAllKeys(content).length;
         }
       }
+      expect(totalKeys).toBeGreaterThan(0);
     });
 
+    // Per-language coverage check for any locale beyond the reference (no-op in US-only build).
     for (const lang of SUPPORTED_LANGUAGES) {
       if (lang === referenceLang) continue;
 
       it(`${lang} translation coverage should be greater than 70%`, () => {
+        const referenceModules: Record<string, string[]> = {};
+        for (const module of REQUIRED_MODULES) {
+          const moduleFile = path.join(LOCALES_DIR, referenceLang, `${module}.json`);
+          if (fs.existsSync(moduleFile)) {
+            const content = JSON.parse(fs.readFileSync(moduleFile, 'utf-8'));
+            referenceModules[module] = getAllKeys(content);
+          }
+        }
+
         let totalReferenceKeys = 0;
         let matchedKeys = 0;
 
@@ -197,12 +207,8 @@ describe('i18n Build Safety Tests', () => {
 
   it('renderer i18n should use static locale imports (packaged-safe)', () => {
     const content = fs.readFileSync(rendererI18nFile, 'utf-8');
+    // US-only deployment bundles only en-US.
     expect(content).toMatch(/import\s+enUS\s+from\s+['"]\.\/locales\/en-US\/index['"]/);
-    expect(content).toMatch(/import\s+zhCN\s+from\s+['"]\.\/locales\/zh-CN\/index['"]/);
-    expect(content).toMatch(/import\s+jaJP\s+from\s+['"]\.\/locales\/ja-JP\/index['"]/);
-    expect(content).toMatch(/import\s+zhTW\s+from\s+['"]\.\/locales\/zh-TW\/index['"]/);
-    expect(content).toMatch(/import\s+koKR\s+from\s+['"]\.\/locales\/ko-KR\/index['"]/);
-    expect(content).toMatch(/import\s+trTR\s+from\s+['"]\.\/locales\/tr-TR\/index['"]/);
     expect(content).not.toContain('import(`./locales/${locale}/index`)');
   });
 

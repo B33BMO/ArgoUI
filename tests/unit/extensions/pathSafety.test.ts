@@ -24,26 +24,26 @@ describe('extensions/pathSafety', () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   });
 
-  it('目标路径与基础目录一致时应返回 true', () => {
+  it('returns true when the target path equals the base directory', () => {
     expect(isPathWithinDirectory(root, root)).toBe(true);
   });
 
-  it('目标路径位于基础目录内部时应返回 true', () => {
+  it('returns true when the target path is inside the base directory', () => {
     const child = path.join(root, 'nested', 'file.txt');
     expect(isPathWithinDirectory(child, root)).toBe(true);
   });
 
-  it('应防止前缀欺骗路径 (safe-root vs safe-root-evil)', () => {
+  it('blocks prefix-spoofing paths (safe-root vs safe-root-evil)', () => {
     const prefixAttackPath = path.resolve('tmp', 'extensions', 'safe-root-evil', 'payload.txt');
     expect(isPathWithinDirectory(prefixAttackPath, root)).toBe(false);
   });
 
-  it('目标路径跳出基础目录时应返回 false', () => {
+  it('returns false when the target path escapes the base directory', () => {
     const escapedPath = path.resolve(root, '..', 'outside.txt');
     expect(isPathWithinDirectory(escapedPath, root)).toBe(false);
   });
 
-  it('应拒绝通过目录符号链接逃逸基础目录的路径', async () => {
+  it('rejects paths that escape the base directory through a directory symlink', async () => {
     const outsideDir = path.join(tempDir, 'outside');
     const outsideFile = path.join(outsideDir, 'secret.txt');
     const symlinkDir = path.join(root, 'linked');
@@ -55,7 +55,7 @@ describe('extensions/pathSafety', () => {
     expect(isPathWithinDirectory(path.join(symlinkDir, 'secret.txt'), root)).toBe(false);
   });
 
-  it('应允许基础目录内尚不存在的新文件路径', () => {
+  it('allows new file paths inside the base directory that do not yet exist', () => {
     const futureFile = path.join(root, 'new-dir', 'new-file.txt');
     expect(isPathWithinDirectory(futureFile, root)).toBe(true);
   });

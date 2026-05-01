@@ -449,10 +449,7 @@ export function initModelBridge(): void {
         e.message?.includes('Unauthorized') ||
         e.message?.includes('Invalid API key');
       const isPermissionError =
-        e.message?.includes('已被禁用') ||
-        e.message?.includes('disabled') ||
-        e.message?.includes('quota') ||
-        e.message?.includes('rate limit');
+        e.message?.includes('disabled') || e.message?.includes('quota') || e.message?.includes('rate limit');
       if (isAuthError || isPermissionError) {
         return errRes;
       }

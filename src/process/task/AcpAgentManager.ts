@@ -867,7 +867,7 @@ ${collectedResponses.join('\n')}`;
         } catch (error) {
           const errMsg = error instanceof Error ? error.message : String(error);
           mainWarn('[AcpAgentManager]', `Failed to re-apply model ${this.persistedModelId}`, error);
-          if (errMsg.includes('model_not_found') || errMsg.includes('无可用渠道')) {
+          if (errMsg.includes('model_not_found') || errMsg.includes('no available channel')) {
             ipcBridge.acpConversation.responseStream.emit({
               type: 'error',
               conversation_id: this.conversation_id,

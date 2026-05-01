@@ -27,10 +27,10 @@ const mapStatusToState = (
   lastStatus?: string,
   recentEvents: IExtensionAgentActivityEvent[] = []
 ): AgentActivityState => {
-  if (lastStatus === 'error' || recentEvents.some((e) => /error|失败|异常/i.test(e.text))) return 'error';
+  if (lastStatus === 'error' || recentEvents.some((e) => /error/i.test(e.text))) return 'error';
 
-  const hasWriteEvent = recentEvents.some((e) => /write|patch|edit|写入|修改|生成文件/i.test(e.text));
-  const hasResearchEvent = recentEvents.some((e) => /search|web|fetch|crawl|调研|检索|搜索/i.test(e.text));
+  const hasWriteEvent = recentEvents.some((e) => /write|patch|edit/i.test(e.text));
+  const hasResearchEvent = recentEvents.some((e) => /search|web|fetch|crawl/i.test(e.text));
   const hasToolEvent = recentEvents.some((e) => e.kind === 'tool');
 
   if (runtimeStatus === 'pending' || (lastStatus && STATUS_TO_SYNCING.has(lastStatus))) return 'syncing';

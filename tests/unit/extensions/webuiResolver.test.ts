@@ -43,7 +43,7 @@ afterEach(() => {
 });
 
 describe('extensions/WebuiResolver', () => {
-  it('过滤非命名空间和保留前缀路径，只保留安全 WebUI 贡献', () => {
+  it('filters out non-namespaced and reserved-prefix paths, keeping only safe WebUI contributions', () => {
     const ext = createTempExtension('ext-safe', {
       apiRoutes: [
         { path: '/api/hijack', entryPoint: 'webui/route.js' },
@@ -61,7 +61,7 @@ describe('extensions/WebuiResolver', () => {
     expect(result[0].config.staticAssets?.map((r) => r.urlPrefix)).toEqual(['/ext-safe/assets']);
   });
 
-  it('当没有有效 apiRoutes/staticAssets 时应忽略该扩展的 webui 贡献', () => {
+  it('ignores an extensions webui contribution when it has no valid apiRoutes/staticAssets', () => {
     const ext = createTempExtension('ext-empty', {
       wsHandlers: [{ namespace: '/ext-empty/ws', entryPoint: 'webui/route.js' }],
       middleware: [{ entryPoint: 'webui/route.js', applyTo: '/**' }],

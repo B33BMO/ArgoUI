@@ -92,7 +92,7 @@ const migrateLegacyData = async () => {
           try {
             await fs.rm(oldDir, { recursive: true });
           } catch (cleanupError) {
-            console.warn('[AionUi] 原目录清理失败，请手动删除:', oldDir, cleanupError);
+            console.warn('[AionUi] Failed to clean up old directory; please remove manually:', oldDir, cleanupError);
           }
         }
       }
@@ -100,7 +100,7 @@ const migrateLegacyData = async () => {
       return true;
     }
   } catch (error) {
-    console.error('[AionUi] 数据迁移失败:', error);
+    console.error('[AionUi] Data migration failed:', error);
   }
 
   return false;

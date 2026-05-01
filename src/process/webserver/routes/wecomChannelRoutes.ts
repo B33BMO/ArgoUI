@@ -126,7 +126,7 @@ async function wecomWebhookHandler(req: Request, res: Response): Promise<void> {
     if (!stream) {
       const expired = createStream(streamId, 'expired');
       upsertStreamContent(streamId, {
-        visibleContent: '会话已过期',
+        visibleContent: 'Session expired',
         thinkingContent: '',
         finished: true,
       });
@@ -156,7 +156,7 @@ async function wecomWebhookHandler(req: Request, res: Response): Promise<void> {
 
   plugin.handleInboundMessage(payload, streamId).catch((error) => {
     upsertStreamContent(streamId, {
-      visibleContent: `处理失败: ${error instanceof Error ? error.message : String(error)}`,
+      visibleContent: `Processing failed: ${error instanceof Error ? error.message : String(error)}`,
       thinkingContent: '',
     });
     finishStream(streamId);
