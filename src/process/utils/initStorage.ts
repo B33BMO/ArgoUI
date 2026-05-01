@@ -7,6 +7,7 @@
 import { mkdirSync as _mkdirSync, existsSync, readdirSync, readFileSync } from 'fs';
 import fs from 'fs/promises';
 import path from 'path';
+import { safeStorage } from 'electron';
 import { getPlatformServices } from '@/common/platform';
 import { application } from '@/common/adapter/ipcBridge';
 import type { TMessage } from '@/common/chat/chatLib';
@@ -118,6 +119,16 @@ const WriteFile = async (filePath: string, data: string) => {
   return fs.writeFile(filePath, data);
 };
 
+// Marker prefix for safeStorage-encrypted blobs on disk. Lets the decoder
+// distinguish OS-keychain ciphertext from legacy base64(URI(JSON)) so existing
+// installs migrate transparently on first write.
+const SAFE_STORAGE_MARKER = 'AIONUI-SS:';
+
+interface JsonFileOptions {
+  /** Encrypt at rest with Electron safeStorage (OS keychain). Required for files holding API keys / OAuth tokens. */
+  encrypted?: boolean;
+}
+
 /**
  * In-memory JSON store backed by a file on disk.
  *
@@ -126,12 +137,55 @@ const WriteFile = async (filePath: string, data: string) => {
  * - `set` / `remove` / `clear` update the cache first, then persist to disk.
  * - Disk writes are serialized via a simple promise chain to prevent corruption.
  *
- * The on-disk format stays base64(encodeURIComponent(JSON)) for backward compat.
+ * Default on-disk format: base64(encodeURIComponent(JSON)).
+ * When `encrypted: true`, the codec uses Electron's safeStorage (OS keychain)
+ * if available; falls back to base64 only when the OS keychain is unavailable
+ * (rare — Linux without libsecret / kwallet). Old base64 files are auto-migrated
+ * on the next persist.
  */
-const JsonFileBuilder = <S extends object = Record<string, unknown>>(filePath: string) => {
-  // -- encoding helpers (unchanged, keeps backward compat) --
-  const encode = (data: unknown) => btoa(encodeURIComponent(String(data)));
-  const decode = (base64: string) => decodeURIComponent(atob(base64));
+const JsonFileBuilder = <S extends object = Record<string, unknown>>(filePath: string, options: JsonFileOptions = {}) => {
+  const wantEncryption = options.encrypted === true;
+
+  let unavailableWarned = false;
+  const useSafeStorage = (): boolean => {
+    if (!wantEncryption) return false;
+    let available = false;
+    try {
+      available = safeStorage.isEncryptionAvailable();
+    } catch {
+      available = false;
+    }
+    if (!available && !unavailableWarned) {
+      unavailableWarned = true;
+      console.warn(
+        `[Storage] safeStorage unavailable for ${filePath} — falling back to legacy base64 codec. ` +
+          'On Linux install libsecret/kwallet, or run Electron with --password-store=basic, to enable OS-keychain encryption.'
+      );
+    }
+    return available;
+  };
+
+  const encodeBase64 = (data: unknown) => btoa(encodeURIComponent(String(data)));
+  const decodeBase64 = (base64: string) => decodeURIComponent(atob(base64));
+
+  const encode = (data: unknown): string => {
+    if (useSafeStorage()) {
+      const ciphertext = safeStorage.encryptString(String(data));
+      return SAFE_STORAGE_MARKER + ciphertext.toString('base64');
+    }
+    return encodeBase64(data);
+  };
+
+  const decode = (raw: string): string => {
+    if (raw.startsWith(SAFE_STORAGE_MARKER)) {
+      if (!useSafeStorage()) {
+        throw new Error(`[Storage] Cannot decrypt ${filePath}: safeStorage unavailable`);
+      }
+      const ciphertext = Buffer.from(raw.slice(SAFE_STORAGE_MARKER.length), 'base64');
+      return safeStorage.decryptString(ciphertext);
+    }
+    return decodeBase64(raw);
+  };
 
   // -- in-memory cache --
   let cache: S | null = null;
@@ -246,7 +300,7 @@ const dirConfig = envFile.getSync('aionui.dir');
 
 const cacheDir = dirConfig?.cacheDir || getHomePage();
 
-const configFile = JsonFileBuilder<IConfigStorageRefer>(path.join(cacheDir, STORAGE_PATH.config));
+const configFile = JsonFileBuilder<IConfigStorageRefer>(path.join(cacheDir, STORAGE_PATH.config), { encrypted: true });
 type ConversationHistoryData = Record<string, TMessage[]>;
 
 const _chatMessageFile = JsonFileBuilder<ConversationHistoryData>(path.join(cacheDir, STORAGE_PATH.chatMessage));

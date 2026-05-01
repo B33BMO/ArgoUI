@@ -8,6 +8,7 @@ import { getPlatformServices } from '@/common/platform';
 import type { AcpBackendAll } from '@/common/types/acpTypes';
 import { JSONRPC_VERSION } from '@/common/types/acpTypes';
 import type { IMcpServer } from '@/common/config/storage';
+import { assertCompliantServer } from './complianceGuard';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -159,18 +160,12 @@ export abstract class AbstractMcpAgent implements IMcpProtocol {
    */
   testMcpConnection(serverOrTransport: IMcpServer | IMcpServer['transport']): Promise<McpConnectionTestResult> {
     try {
-      // 判断是完整的 IMcpServer 还是仅 transport
+      assertCompliantServer(serverOrTransport);
       const transport = 'transport' in serverOrTransport ? serverOrTransport.transport : serverOrTransport;
 
       switch (transport.type) {
         case 'stdio':
           return this.testStdioConnection(transport);
-        case 'sse':
-          return this.testSseConnection(transport);
-        case 'http':
-          return this.testHttpConnection(transport);
-        case 'streamable_http':
-          return this.testStreamableHttpConnection(transport);
         default:
           return Promise.resolve({
             success: false,

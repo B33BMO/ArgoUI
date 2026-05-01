@@ -7,6 +7,11 @@
 import { ipcBridge } from '@/common';
 import { mcpService } from '@process/services/mcpServices/McpService';
 import { mcpOAuthService } from '@process/services/mcpServices/McpOAuthService';
+import {
+  assertCompliantServer,
+  filterCompliantServers,
+  RemoteMcpTransportError,
+} from '@process/services/mcpServices/complianceGuard';
 
 export function initMcpBridge(): void {
   // MCP 服务相关 IPC 处理程序
@@ -24,6 +29,7 @@ export function initMcpBridge(): void {
 
   ipcBridge.mcpService.testMcpConnection.provider(async (server) => {
     try {
+      assertCompliantServer(server);
       const result = await mcpService.testMcpConnection(server);
       return { success: true, data: result };
     } catch (error) {
@@ -36,7 +42,12 @@ export function initMcpBridge(): void {
 
   ipcBridge.mcpService.syncMcpToAgents.provider(async ({ mcpServers, agents }) => {
     try {
-      const result = await mcpService.syncMcpToAgents(mcpServers, agents);
+      const compliant = filterCompliantServers(mcpServers);
+      if (compliant.length !== mcpServers.length) {
+        const dropped = mcpServers.length - compliant.length;
+        console.warn(`[mcpBridge] Skipped ${dropped} non-stdio MCP server(s) — remote transports are disabled.`);
+      }
+      const result = await mcpService.syncMcpToAgents(compliant, agents);
       return { success: true, data: result };
     } catch (error) {
       return {
@@ -58,29 +69,13 @@ export function initMcpBridge(): void {
     }
   });
 
-  // OAuth 相关 IPC 处理程序
-  ipcBridge.mcpService.checkOAuthStatus.provider(async (server) => {
-    try {
-      const result = await mcpOAuthService.checkOAuthStatus(server);
-      return { success: true, data: result };
-    } catch (error) {
-      return {
-        success: false,
-        msg: error instanceof Error ? error.message : 'Unknown error checking OAuth status',
-      };
-    }
+  // OAuth 相关 IPC 处理程序 — only meaningful for remote MCPs, hard-disabled in this build.
+  ipcBridge.mcpService.checkOAuthStatus.provider(async () => {
+    return { success: false, msg: new RemoteMcpTransportError().message };
   });
 
-  ipcBridge.mcpService.loginMcpOAuth.provider(async ({ server, config }) => {
-    try {
-      const result = await mcpOAuthService.login(server, config);
-      return { success: true, data: result };
-    } catch (error) {
-      return {
-        success: false,
-        msg: error instanceof Error ? error.message : 'Unknown error during OAuth login',
-      };
-    }
+  ipcBridge.mcpService.loginMcpOAuth.provider(async () => {
+    return { success: false, msg: new RemoteMcpTransportError().message };
   });
 
   ipcBridge.mcpService.logoutMcpOAuth.provider(async (serverName) => {
