@@ -8,7 +8,7 @@
  * Bridge initialiser for standalone (no-Electron) mode.
  * Skips Electron-only bridges:
  *   dialogBridge, applicationBridge (partial — core handlers in applicationBridgeCore),
- *   windowControlsBridge, updateBridge, webuiBridge
+ *   windowControlsBridge, webuiBridge
  * Note: shellBridge is replaced by shellBridgeStandalone (child_process-based).
  */
 import { logger } from '@office-ai/platform';
@@ -52,7 +52,7 @@ export async function initBridgeStandalone(): Promise<void> {
   const channelRepo = new SqliteChannelRepository();
 
   // Skipped (Electron-only): dialogBridge, applicationBridge (partial — see applicationBridgeCore),
-  // windowControlsBridge, updateBridge, webuiBridge
+  // windowControlsBridge, webuiBridge
 
   initApplicationBridgeCore();
   initShellBridgeStandalone();

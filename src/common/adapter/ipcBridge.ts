@@ -12,14 +12,6 @@ import type { AgentBackend, AcpModelInfo } from '../types/acpTypes';
 import type { SlashCommandItem } from '../chat/slash/types';
 import type { IMcpServer, IProvider, TChatConversation, TProviderWithModel, ICssTheme } from '../config/storage';
 import type { PreviewHistoryTarget, PreviewSnapshotInfo } from '../types/preview';
-import type {
-  UpdateCheckRequest,
-  UpdateCheckResult,
-  UpdateDownloadProgressEvent,
-  UpdateDownloadRequest,
-  UpdateDownloadResult,
-  AutoUpdateStatus,
-} from '../update/updateTypes';
 import type { ProtocolDetectionRequest, ProtocolDetectionResponse } from '../utils/protocolDetector';
 import type { SpeechToTextRequest, SpeechToTextResult } from '../types/speech';
 
@@ -175,33 +167,6 @@ export const application = {
   ),
   // DevTools state change notification
   devToolsStateChanged: bridge.buildEmitter<{ isOpen: boolean }>('app.devtools-state-changed'),
-};
-
-// Manual (opt-in) updates via GitHub Releases
-export const update = {
-  /** Ask the renderer to open the update UI (e.g. from app menu). */
-  open: bridge.buildEmitter<{ source?: 'menu' | 'about' }>('update.open'),
-  /** Check GitHub releases and return latest version info. */
-  check: bridge.buildProvider<IBridgeResponse<UpdateCheckResult>, UpdateCheckRequest>('update.check'),
-  /** Download a chosen release asset (explicit user action). */
-  download: bridge.buildProvider<IBridgeResponse<UpdateDownloadResult>, UpdateDownloadRequest>('update.download'),
-  /** Download progress events emitted by main process. */
-  downloadProgress: bridge.buildEmitter<UpdateDownloadProgressEvent>('update.download.progress'),
-};
-
-// Auto-updater (electron-updater) API
-export const autoUpdate = {
-  /** Check for updates using electron-updater */
-  check: bridge.buildProvider<
-    IBridgeResponse<{ updateInfo?: { version: string; releaseDate?: string; releaseNotes?: string } }>,
-    { includePrerelease?: boolean }
-  >('auto-update.check'),
-  /** Download update using electron-updater */
-  download: bridge.buildProvider<IBridgeResponse, void>('auto-update.download'),
-  /** Quit and install the downloaded update */
-  quitAndInstall: bridge.buildProvider<void, void>('auto-update.quit-and-install'),
-  /** Auto-update status events */
-  status: bridge.buildEmitter<AutoUpdateStatus>('auto-update.status'),
 };
 
 export const starOffice = {

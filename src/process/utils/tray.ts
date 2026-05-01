@@ -206,14 +206,6 @@ const buildTrayContextMenu = async (): Promise<Electron.Menu> => {
   });
   template.push({ type: 'separator' });
   template.push({
-    label: i18n.t('common.tray.checkUpdate'),
-    click: () => {
-      showAndFocus();
-      mainWindowRef?.webContents.send('tray:check-update');
-    },
-  });
-  template.push({ type: 'separator' });
-  template.push({
     label: i18n.t('common.tray.about'),
     click: () => {
       showAndFocus();

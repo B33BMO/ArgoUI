@@ -12,7 +12,7 @@ import Titlebar from '@/renderer/components/layout/Titlebar';
 import { Layout as ArcoLayout } from '@arco-design/web-react';
 import { MenuFold, MenuUnfold } from '@icon-park/react';
 import classNames from 'classnames';
-import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutContext } from '@renderer/hooks/context/LayoutContext';
 import { NavigationHistoryProvider } from '@renderer/hooks/context/NavigationHistoryContext';
@@ -57,8 +57,6 @@ const useDebug = () => {
   return { onClick };
 };
 
-const UpdateModal = React.lazy(() => import('@/renderer/components/settings/UpdateModal'));
-
 const DEFAULT_SIDER_WIDTH = 250;
 const DESKTOP_COLLAPSED_WIDTH = 64;
 const SIDER_DRAG_SNAP_THRESHOLD = Math.round((DEFAULT_SIDER_WIDTH + DESKTOP_COLLAPSED_WIDTH) / 2);
@@ -92,7 +90,6 @@ const Layout: React.FC<{
     typeof window === 'undefined' ? 390 : window.innerWidth
   );
   const [customCss, setCustomCss] = useState<string>('');
-  const [shouldMountUpdateModal, setShouldMountUpdateModal] = useState(false);
   const { onClick } = useDebug();
   const { contextHolder: multiAgentContextHolder } = useMultiAgentDetection();
   const { contextHolder: directorySelectionContextHolder } = useDirectorySelection();
@@ -318,30 +315,17 @@ const Layout: React.FC<{
       }
     };
 
-    // Handle check update request from tray / 托盘请求检查更新
-    // 1. Navigate to about page / 导航到关于页面
-    // 2. Trigger update modal check / 触发更新模态框检查
-    const handleCheckUpdate = () => {
-      void navigate('/settings/about');
-      // Trigger update modal after a short delay to ensure page is loaded
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('aionui-open-update-modal', { detail: { source: 'tray' } }));
-      }, 100);
-    };
-
     // Listen for tray events / 监听托盘事件
     window.addEventListener('tray:navigate-to-guid', handleNavigateToGuid as EventListener);
     window.addEventListener('tray:navigate-to-conversation', handleNavigateToConversation as EventListener);
     window.addEventListener('tray:open-about', handleOpenAbout as EventListener);
     window.addEventListener('tray:pause-all-tasks', handlePauseAllTasks as EventListener);
-    window.addEventListener('tray:check-update', handleCheckUpdate as EventListener);
 
     return () => {
       window.removeEventListener('tray:navigate-to-guid', handleNavigateToGuid as EventListener);
       window.removeEventListener('tray:navigate-to-conversation', handleNavigateToConversation as EventListener);
       window.removeEventListener('tray:open-about', handleOpenAbout as EventListener);
       window.removeEventListener('tray:pause-all-tasks', handlePauseAllTasks as EventListener);
-      window.removeEventListener('tray:check-update', handleCheckUpdate as EventListener);
     };
   }, [navigate]);
 
@@ -533,9 +517,6 @@ const Layout: React.FC<{
               {multiAgentContextHolder}
               {directorySelectionContextHolder}
               <PwaPullToRefresh />
-              <Suspense fallback={null}>
-                <UpdateModal />
-              </Suspense>
             </ArcoLayout.Content>
           </ArcoLayout>
         </div>

@@ -7,11 +7,6 @@
 // configureChromium sets app name (dev isolation) and Chromium flags — must run before
 // ANY module that calls app.getPath('userData'), because Electron caches the path on first call.
 import './process/utils/configureChromium';
-import * as Sentry from '@sentry/electron/main';
-
-Sentry.init({
-  dsn: process.env.SENTRY_DSN,
-});
 
 import './process/utils/configureConsoleLog';
 import { app, BrowserWindow, nativeImage, net, powerMonitor, protocol, screen } from 'electron';
@@ -26,7 +21,6 @@ import { initializeProcess } from './process';
 import { ProcessConfig } from './process/utils/initStorage';
 import { loadShellEnvironmentAsync, logEnvironmentDiagnostics, mergePaths } from './process/utils/shellEnv';
 import { initializeAcpDetector, registerWindowMaximizeListeners, disposeAllTeamSessions } from '@process/bridge';
-import './process/bridge/feedbackBridge';
 import { wasLaunchedAtLogin } from '@process/bridge/applicationBridge';
 import { onCloseToTrayChanged, onLanguageChanged } from './process/bridge/systemSettingsBridge';
 import { setInitialLanguage } from '@process/services/i18n';
@@ -34,7 +28,6 @@ import { workerTaskManager } from './process/task/workerTaskManagerSingleton';
 import { setupApplicationMenu } from './process/utils/appMenu';
 import { startWebServer } from './process/webserver';
 import { initializeZoomFactor, setupZoomForWindow } from './process/utils/zoom';
-import { getOrCreateAnalyticsId } from './process/utils/analyticsId';
 import {
   clearPendingDeepLinkUrl,
   getPendingDeepLinkUrl,
@@ -155,15 +148,10 @@ protocol.registerSchemesAsPrivileged([
   },
 ]);
 
-// Global error handlers for main process
-// Sentry automatically captures these, but we keep the handlers to prevent Electron's default error dialog
-process.on('uncaughtException', (_error) => {
-  // Sentry captures this automatically
-});
+// Global error handlers for main process — prevent Electron's default error dialog
+process.on('uncaughtException', (_error) => {});
 
-process.on('unhandledRejection', (_reason, _promise) => {
-  // Sentry captures this automatically
-});
+process.on('unhandledRejection', (_reason, _promise) => {});
 
 const hasSwitch = (flag: string) => process.argv.includes(`--${flag}`) || app.commandLine.hasSwitch(flag);
 const getSwitchValue = (flag: string): string | undefined => {
@@ -289,30 +277,6 @@ const createWindow = ({ showOnReady = true }: { showOnReady?: boolean } = {}): v
 
   setupZoomForWindow(mainWindow);
   registerWindowMaximizeListeners(mainWindow);
-
-  // Initialize auto-updater service (skip when disabled via env, e.g. E2E / CI)
-  // 初始化自动更新服务（通过环境变量禁用时跳过，例如 E2E / CI 场景）
-  const isCiRuntime = process.env.CI === 'true' || process.env.CI === '1' || process.env.GITHUB_ACTIONS === 'true';
-  const disableAutoUpdater =
-    process.env.AIONUI_DISABLE_AUTO_UPDATE === '1' || process.env.AIONUI_E2E_TEST === '1' || isCiRuntime;
-  if (!disableAutoUpdater) {
-    Promise.all([import('./process/services/autoUpdaterService'), import('./process/bridge/updateBridge')])
-      .then(([{ autoUpdaterService }, { createAutoUpdateStatusBroadcast }]) => {
-        // Create status broadcast callback that emits via ipcBridge (pure emitter, no window binding)
-        const statusBroadcast = createAutoUpdateStatusBroadcast();
-        autoUpdaterService.initialize(statusBroadcast);
-        // Check for updates after 3 seconds delay
-        // 3秒后检查更新
-        setTimeout(() => {
-          void autoUpdaterService.checkForUpdatesAndNotify();
-        }, 3000);
-      })
-      .catch((error) => {
-        console.error('[App] Failed to initialize autoUpdaterService:', error);
-      });
-  } else {
-    console.log('[AionUi] Auto-updater disabled via env/CI guard');
-  }
 
   // Load the renderer: dev server URL in development, built HTML file in production
   const rendererUrl = process.env['ELECTRON_RENDERER_URL'];
@@ -442,8 +406,6 @@ const handleAppReady = async (): Promise<void> => {
       // Ignore dock icon errors in development
     }
   }
-
-  Sentry.setUser({ id: getOrCreateAnalyticsId() });
 
   try {
     await initializeProcess();

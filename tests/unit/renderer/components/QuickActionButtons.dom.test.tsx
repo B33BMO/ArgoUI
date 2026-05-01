@@ -45,41 +45,19 @@ describe('QuickActionButtons', () => {
     vi.clearAllMocks();
   });
 
-  it('calls the bug report callback from the first quick action', () => {
-    const onOpenBugReport = vi.fn();
-
-    render(
-      <QuickActionButtons
-        onOpenLink={vi.fn()}
-        onOpenBugReport={onOpenBugReport}
-        inactiveBorderColor='#ccc'
-        activeShadow='none'
-      />
-    );
-
-    fireEvent.click(screen.getByText('conversation.welcome.quickActionFeedback').closest('div') as HTMLElement);
-    expect(onOpenBugReport).toHaveBeenCalledTimes(1);
-  });
-
-  it('keeps the repo and WebUI quick actions working without triggering bug report', () => {
+  it('opens the repo link from the repo quick action', () => {
     const onOpenLink = vi.fn();
-    const onOpenBugReport = vi.fn();
 
-    render(
-      <QuickActionButtons
-        onOpenLink={onOpenLink}
-        onOpenBugReport={onOpenBugReport}
-        inactiveBorderColor='#ccc'
-        activeShadow='none'
-      />
-    );
+    render(<QuickActionButtons onOpenLink={onOpenLink} inactiveBorderColor='#ccc' activeShadow='none' />);
 
     fireEvent.click(screen.getByText('conversation.welcome.quickActionStar').closest('div') as HTMLElement);
     expect(onOpenLink).toHaveBeenCalledWith('https://github.com/iOfficeAI/AionUi');
-    expect(onOpenBugReport).not.toHaveBeenCalled();
+  });
+
+  it('navigates to the WebUI settings page from the WebUI quick action', () => {
+    render(<QuickActionButtons onOpenLink={vi.fn()} inactiveBorderColor='#ccc' activeShadow='none' />);
 
     fireEvent.click(screen.getByText(/settings\.webui/).closest('div') as HTMLElement);
     expect(navigateMock).toHaveBeenCalledWith('/settings/webui');
-    expect(onOpenBugReport).not.toHaveBeenCalled();
   });
 });
