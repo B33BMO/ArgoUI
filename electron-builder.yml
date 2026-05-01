@@ -1,12 +1,12 @@
-appId: com.aionui.app
-productName: AionUi
-executableName: AionUi
-copyright: Copyright © 2024 AionUi
+appId: guru.bmo.argoui
+productName: ArgoUI
+executableName: ArgoUI
+copyright: Copyright © 2026 ArgoUI
 
 protocols:
-  - name: AionUi Protocol
+  - name: ArgoUI Protocol
     schemes:
-      - aionui
+      - argoui
 
 asar:
   smartUnpack: true
@@ -172,17 +172,17 @@ linux:
   icon: resources/app.png
   artifactName: ${productName}-${version}-${os}-${arch}.${ext}
   category: Utility
-  maintainer: aionui
-  vendor: aionui
+  maintainer: brandon@bmo.guru
+  vendor: ArgoUI
   synopsis: ${description}
   description: ${description}
   desktop:
     entry:
-      Name: AionUi
+      Name: ArgoUI
       Comment: ${description}
-      Icon: aionui
+      Icon: argoui
       Categories: Office;Utility;
-      MimeType: x-scheme-handler/aionui;
+      MimeType: x-scheme-handler/argoui;
 
 npmRebuild: false
 buildDependenciesFromSource: false
