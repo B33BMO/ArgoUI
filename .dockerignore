@@ -1,7 +1,44 @@
+# Keep build context lean — the build stage runs `bun install` itself,
+# so we don't need to ship node_modules; everything else here is either
+# generated, irrelevant, or shouldn't end up in an image.
+.git
+.gitignore
+.gitattributes
+.github
+
 node_modules
 out
 dist-server
-.git
-.github
+coverage
+logs
 data
 *.log
+
+# Test-only stuff
+tests
+playwright-report
+test-results
+playwright.config.ts
+
+# Editor / OS junk
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Local-only
+.env
+.env.*
+!.env.example
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Mobile companion app — not part of the server build
+mobile
+
+# Claude Code workspace
+.claude
+.serena

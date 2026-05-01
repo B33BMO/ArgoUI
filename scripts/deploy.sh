@@ -13,7 +13,12 @@
 #   ./scripts/deploy.sh --reset-password   # rotate admin password before start
 #   ./scripts/deploy.sh --skip-build       # skip build (use existing dist-server/)
 #   ./scripts/deploy.sh --build-only       # build, don't start
-#   ./scripts/deploy.sh --stop             # stop a backgrounded instance
+#   ./scripts/deploy.sh --stop             # stop a backgrounded / docker instance
+#
+# Docker mode (recommended for shared-tech deployments):
+#   ./scripts/deploy.sh --docker           # build image + start via docker compose
+#   ./scripts/deploy.sh --docker --stop    # stop the docker stack
+#   ./scripts/deploy.sh --docker --logs    # follow docker logs
 # ============================================================================
 
 set -euo pipefail
@@ -47,6 +52,8 @@ DO_START=1
 BACKGROUND=0
 RESET_PASS=0
 STOP=0
+DOCKER=0
+LOGS=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -56,14 +63,91 @@ while [[ $# -gt 0 ]]; do
     --skip-build)      DO_BUILD=0; shift ;;
     --build-only)      DO_START=0; shift ;;
     --stop)            STOP=1; shift ;;
+    --docker)          DOCKER=1; shift ;;
+    --logs)            LOGS=1; shift ;;
     -h|--help)
-      sed -n '3,18p' "$0" | sed 's/^# \{0,1\}//'
+      sed -n '3,23p' "$0" | sed 's/^# \{0,1\}//'
       exit 0 ;;
     *) die "Unknown flag: $1 (use --help)" ;;
   esac
 done
 
-# ── stop mode ───────────────────────────────────────────────────────────────
+# ── docker mode ─────────────────────────────────────────────────────────────
+if [[ $DOCKER -eq 1 ]]; then
+  if ! command -v docker >/dev/null 2>&1; then
+    die "docker not found on PATH. Install Docker Engine, then re-run."
+  fi
+  # Compose v2 ships as `docker compose` (subcommand). Older v1 = `docker-compose`.
+  if docker compose version >/dev/null 2>&1; then
+    DC=(docker compose)
+  elif command -v docker-compose >/dev/null 2>&1; then
+    DC=(docker-compose)
+  else
+    die "docker compose plugin not available (need v2: 'docker compose', or v1: 'docker-compose')"
+  fi
+  export ARGOUI_PORT="$PORT"
+
+  if [[ $LOGS -eq 1 ]]; then
+    exec "${DC[@]}" logs -f argoui
+  fi
+
+  if [[ $STOP -eq 1 ]]; then
+    info "Stopping docker stack…"
+    "${DC[@]}" down
+    ok "Stopped."
+    exit 0
+  fi
+
+  if [[ $RESET_PASS -eq 1 ]]; then
+    info "Rotating admin password inside container…"
+    "${DC[@]}" exec -T argoui bun dist-server/server.mjs --resetpass admin \
+      || warn "resetpass failed — run again after the container is healthy"
+  fi
+
+  if [[ $DO_BUILD -eq 1 ]]; then
+    info "Building docker image…"
+    "${DC[@]}" build
+  fi
+
+  if [[ $DO_START -eq 0 ]]; then
+    ok "Build-only — exiting."
+    exit 0
+  fi
+
+  info "Starting docker stack on port $PORT (network_mode=host)…"
+  "${DC[@]}" up -d
+  ok "Stack started. Container: argoui"
+  echo
+  echo "${C_BOLD}${C_C}================================================================${C_N}"
+  echo "${C_BOLD}  ArgoUI (docker) is starting${C_N}"
+  echo "${C_BOLD}${C_C}================================================================${C_N}"
+  echo "  URL (loopback):       ${C_G}http://127.0.0.1:${PORT}${C_N}"
+  echo "  Follow logs:          $0 --docker --logs"
+  echo "  Stop stack:           $0 --docker --stop"
+  echo "  Rotate admin pwd:     $0 --docker --reset-password"
+  echo "${C_BOLD}${C_C}================================================================${C_N}"
+  echo
+  info "Waiting up to 60s for first-boot credentials banner in logs…"
+  for _ in {1..60}; do
+    if "${DC[@]}" logs --no-color argoui 2>/dev/null | grep -q 'Or Use Initial Admin Credentials\|Web Server Started Successfully'; then
+      break
+    fi
+    sleep 1
+  done
+  echo
+  echo "${C_BOLD}Initial admin credentials (from container log):${C_N}"
+  "${DC[@]}" logs --no-color argoui 2>/dev/null \
+    | awk '/Or Use Initial Admin Credentials/,/^={3,}$/' \
+    | tail -n 20 \
+    || warn "No credentials banner yet. Tail logs: $0 --docker --logs"
+  echo
+  warn "Network: container uses network_mode=host. The webserver binds 127.0.0.1"
+  warn "of the host. Front it with a reverse proxy (nginx/caddy/traefik) to"
+  warn "publish to your techs over TLS. Do NOT expose port $PORT directly."
+  exit 0
+fi
+
+# ── stop mode (host/nohup) ──────────────────────────────────────────────────
 if [[ $STOP -eq 1 ]]; then
   if [[ ! -f "$PID_FILE" ]]; then
     warn "No PID file at $PID_FILE — nothing to stop."
