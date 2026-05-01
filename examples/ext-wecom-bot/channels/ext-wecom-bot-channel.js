@@ -203,23 +203,23 @@ class ExtWecomBotChannelPlugin {
       return items
         .map((item) => {
           if (item?.msgtype === 'text') return item?.text?.content || '';
-          if (item?.msgtype === 'image') return item?.image?.url ? `[图片] ${item.image.url}` : '';
+          if (item?.msgtype === 'image') return item?.image?.url ? `[image] ${item.image.url}` : '';
           return '';
         })
         .filter(Boolean)
         .join('\n');
     }
     if (msgType === 'image') {
-      return payload?.image?.url ? `[图片] ${payload.image.url}` : '[图片]';
+      return payload?.image?.url ? `[image] ${payload.image.url}` : '[image]';
     }
     if (msgType === 'file') {
-      return payload?.file?.name ? `[文件] ${payload.file.name}` : '[文件]';
+      return payload?.file?.name ? `[file] ${payload.file.name}` : '[file]';
     }
     if (msgType === 'location') {
       const name = payload?.location?.name || payload?.location?.label || '';
       const lat = payload?.location?.latitude || '';
       const lng = payload?.location?.longitude || '';
-      return name ? `[位置] ${name} (${lat}, ${lng})` : `[位置] ${lat}, ${lng}`;
+      return name ? `[location] ${name} (${lat}, ${lng})` : `[location] ${lat}, ${lng}`;
     }
     return '';
   }

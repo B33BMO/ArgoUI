@@ -69,7 +69,7 @@ const toEventText = (message: TMessage): { kind: 'status' | 'tool' | 'message'; 
     const content = (message.content || {}) as { status?: string };
     return {
       kind: 'status',
-      text: `状态: ${String(content.status || 'unknown')}`,
+      text: `Status: ${String(content.status || 'unknown')}`,
       at,
     };
   }
@@ -80,7 +80,7 @@ const toEventText = (message: TMessage): { kind: 'status' | 'tool' | 'message'; 
     message.type === 'codex_tool_call' ||
     message.type === 'tool_group'
   ) {
-    return { kind: 'tool', text: '工具执行中', at };
+    return { kind: 'tool', text: 'Tool running', at };
   }
 
   if (message.type === 'text' && message.position === 'left') {
@@ -166,7 +166,7 @@ export class ActivitySnapshotBuilder {
           activeConversations: runtimeStatus === 'running' || runtimeStatus === 'pending' ? 1 : 0,
           lastActiveAt: latestEventAt,
           lastStatus: lastStatus?.status,
-          currentTask: events[0]?.text || (runtimeStatus === 'running' ? '执行中' : '空闲'),
+          currentTask: events[0]?.text || (runtimeStatus === 'running' ? 'Running' : 'Idle'),
           recentEvents: events,
         });
         continue;

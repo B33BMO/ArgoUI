@@ -241,7 +241,7 @@
 
   autoplayBtn.addEventListener('click', () => {
     autoPlay = !autoPlay;
-    autoplayBtn.textContent = `自动轮询：${autoPlay ? '开' : '关'}`;
+    autoplayBtn.textContent = `Auto-refresh: ${autoPlay ? 'on' : 'off'}`;
   });
 
   setInterval(() => {

@@ -66,10 +66,41 @@ Open `http://127.0.0.1:3000` and log in.
 ./scripts/deploy.sh --reset-password   # rotate admin password, then start
 ./scripts/deploy.sh --skip-build       # use existing dist-server/
 ./scripts/deploy.sh --build-only       # build, don't start
-./scripts/deploy.sh --stop             # stop a backgrounded instance
+./scripts/deploy.sh --stop             # stop a backgrounded / docker instance
 ```
 
 Background-mode logs land in `logs/server.log`, PID in `logs/server.pid` (both gitignored).
+
+### Docker (shared-tech deployment)
+
+For a single shared box serving multiple techs, use Docker:
+
+```bash
+./scripts/deploy.sh --docker           # build image + start via docker compose
+./scripts/deploy.sh --docker --stop    # stop the docker stack
+./scripts/deploy.sh --docker --logs    # follow container logs
+./scripts/deploy.sh --docker --reset-password  # rotate admin password
+```
+
+The container uses `network_mode: host` and the webserver binds `127.0.0.1` of the host. Front it with a reverse proxy (nginx, caddy, traefik) to publish to your techs over TLS with auth:
+
+```
+# Example nginx snippet
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+
+**Container security defaults:**
+- Runs as non-root (UID 10001), read-only rootfs, no new privileges, all capabilities dropped
+- `safeStorage` falls back to base64 (no OS keychain in container) — rely on host disk encryption
+- Named volume `argoui-data` holds the SQLite DB + config — back this up
+- Do not expose port 3000 directly on the host's external interfaces — only the reverse proxy should reach it
 
 ### Lost the admin password?
 
