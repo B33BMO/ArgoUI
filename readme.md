@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="./resources/aionui-banner-1.png" alt="AionUi - Cowork with AI Agents" width="100%">
+  <img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/411f80ca-4a4e-4708-ba44-d3f9b7ca81d5" />
+
 </p>
 
 <p align="center">
